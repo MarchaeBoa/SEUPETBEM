@@ -14,22 +14,41 @@ const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@libsql/client');
 
+// Em ambientes serverless (Vercel), o filesystem do projeto é read-only:
+// apenas /tmp é gravável. Se o operador não configurou Turso, caímos para
+// um SQLite em /tmp (note que /tmp não persiste entre cold starts — isso
+// é apenas um fallback para não derrubar o deploy; use Turso em produção).
+const isServerless = !!process.env.VERCEL;
+const defaultLocalUrl = isServerless
+  ? 'file:/tmp/petcare.db'
+  : 'file:./data/petcare.db';
+
 const url =
   process.env.TURSO_DATABASE_URL ||
   process.env.DATABASE_URL ||
-  'file:./data/petcare.db';
+  defaultLocalUrl;
 
 const authToken = process.env.TURSO_AUTH_TOKEN;
 
+if (isServerless && !process.env.TURSO_DATABASE_URL && !process.env.DATABASE_URL) {
+  console.warn(
+    '[db] Rodando no Vercel sem TURSO_DATABASE_URL configurada. ' +
+    'Usando SQLite em /tmp (os dados NÃO persistem entre deploys/cold starts). ' +
+    'Configure Turso em produção: https://turso.tech'
+  );
+}
+
 // Para URLs `file:` o libsql não cria diretórios pais automaticamente —
-// garantimos que a pasta existe antes de abrir o banco local. No Vercel,
-// onde só /tmp é gravável, recomende Turso (TURSO_DATABASE_URL) ou use um
-// caminho em /tmp via DATABASE_URL.
+// garantimos que a pasta existe antes de abrir o banco local.
 if (url.startsWith('file:')) {
   const filePath = url.slice('file:'.length);
   const dir = path.dirname(filePath);
-  if (dir && dir !== '.') {
-    fs.mkdirSync(dir, { recursive: true });
+  if (dir && dir !== '.' && dir !== '/') {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch (err) {
+      console.error(`[db] Não foi possível criar diretório ${dir}:`, err.message);
+    }
   }
 }
 

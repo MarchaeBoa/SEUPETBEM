@@ -127,10 +127,13 @@
   async function loadUser() {
     try {
       const { user } = await api('/api/auth/me');
-      $('#user-name').textContent = user.name;
-      $('#business-name').textContent = user.business_name;
+      if (!user) throw new Error('Usuário não encontrado');
+      $('#user-name').textContent = user.name || '–';
+      $('#business-name').textContent = user.business_name || '–';
     } catch (err) {
+      // Erro de rede / 500: mostra toast. 401 já é tratado em api() (redireciona).
       console.error(err);
+      toast('Não foi possível carregar seus dados. Tente novamente.', 'error');
     }
   }
 

@@ -4,7 +4,18 @@
  */
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+const DEFAULT_SECRET = 'dev-secret-change-me';
+const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_SECRET;
+
+// Em produção, um segredo default é crítico — logamos um aviso explícito.
+// O app continua rodando (para não derrubar todo o deploy), mas o operador
+// precisa configurar JWT_SECRET com um valor aleatório e forte.
+if (JWT_SECRET === DEFAULT_SECRET && process.env.NODE_ENV === 'production') {
+  console.warn(
+    '[auth] ATENÇÃO: JWT_SECRET não configurado em produção. ' +
+    'Defina a variável de ambiente JWT_SECRET com um valor aleatório seguro.'
+  );
+}
 
 function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
