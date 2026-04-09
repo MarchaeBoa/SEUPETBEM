@@ -243,7 +243,7 @@ nav {
   .blob, .paw { animation: none; }
   .paw { opacity: .5; }
 }
-.hero-content { max-width: 580px; }
+.hero-content { max-width: 580px; min-width: 0; }
 .hero-badge {
   display: inline-flex;
   align-items: center;
@@ -276,18 +276,10 @@ nav {
 .hero h1 em {
   font-style: normal;
   color: var(--accent-dark);
-  position: relative;
-  white-space: nowrap;
-}
-.hero h1 em::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 4px;
-  height: 10px;
-  background: rgba(16, 185, 129, .18);
-  z-index: -1;
+  background-image: linear-gradient(180deg, transparent 0 72%, rgba(16, 185, 129, .18) 72% 94%, transparent 94% 100%);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 2px;
   border-radius: 4px;
 }
 .hero-lead {
