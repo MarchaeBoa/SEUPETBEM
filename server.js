@@ -14,6 +14,7 @@ const clientRoutes = require('./routes/clients');
 const petRoutes = require('./routes/pets');
 const appointmentRoutes = require('./routes/appointments');
 const dashboardRoutes = require('./routes/dashboard');
+const waitlistRoutes = require('./routes/waitlist');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -43,6 +44,7 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/pets', petRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/waitlist', waitlistRoutes);
 
 // Healthcheck
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'petcare-pro' }));
@@ -64,6 +66,11 @@ app.get(['/signup', '/cadastro'], sendPage('signup.html'));
 app.get('/termos', sendPage('termos.html'));
 app.get(['/privacidade', '/politica-de-privacidade'], sendPage('privacidade.html'));
 app.get('/lgpd', sendPage('lgpd.html'));
+
+// Página de obrigado — destino do formulário de lista de espera e do
+// cadastro. É aqui que o GTM dispara o evento de conversão `lead_submit`
+// / `sign_up`, então manter uma URL dedicada e estável é importante.
+app.get(['/obrigado', '/thank-you'], sendPage('obrigado.html'));
 
 // Tratamento global de erros
 app.use((err, _req, res, _next) => {

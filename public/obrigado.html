@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Obrigado | PetCare Pro</title>
+  <meta name="description" content="Sua inscrição foi recebida. Em breve entraremos em contato com novidades sobre o lançamento da PetCare Pro." />
+  <!-- noindex: página de conversão não deve aparecer em busca orgânica
+       (evita contar conversões de tráfego que não passou pelo formulário). -->
+  <meta name="robots" content="noindex, nofollow" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/landing.css" />
+  <script src="/js/site-config.js"></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">
+    <span class="logo-mark">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="8" fill="#0B1E3F"/>
+        <path d="M10 21c0-3.5 2.5-6 6-6s6 2.5 6 6v1H10v-1z" fill="#10B981"/>
+        <circle cx="12" cy="12" r="1.8" fill="#10B981"/>
+        <circle cx="20" cy="12" r="1.8" fill="#10B981"/>
+        <circle cx="9" cy="15.5" r="1.4" fill="#10B981"/>
+        <circle cx="23" cy="15.5" r="1.4" fill="#10B981"/>
+      </svg>
+    </span>
+    <span data-site="brand">PetCare Pro</span>
+  </a>
+  <div class="nav-actions">
+    <a href="/" class="nav-login">Voltar ao início</a>
+  </div>
+</nav>
+
+<main class="thankyou">
+  <div class="thankyou-inner">
+    <div class="thankyou-icon" aria-hidden="true">
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <circle cx="36" cy="36" r="34" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+        <path d="M22 37l10 10 20-22" stroke="#10B981" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1>Pronto! Você está na lista.</h1>
+    <p class="thankyou-lead">Obrigado por reservar sua vaga no pré-lançamento da <strong data-site="brand">PetCare Pro</strong>. Vamos abrir novas vagas em lotes pequenos e avisaremos por e-mail em ordem de chegada.</p>
+
+    <div class="thankyou-steps">
+      <h2>O que acontece agora</h2>
+      <ol>
+        <li>
+          <strong>Confirme seu e-mail.</strong>
+          Caso nosso e-mail vá para a caixa de spam ou promoções, marque como "não é spam" — é o que nos garante chegar até você.
+        </li>
+        <li>
+          <strong>Aguarde a abertura do próximo lote.</strong>
+          Não tem prazo fixo: abrimos vagas assim que temos capacidade de dar suporte dedicado a cada nova implantação.
+        </li>
+        <li>
+          <strong>Receba o convite.</strong>
+          Enviaremos um link exclusivo para criar sua conta e começar a usar a plataforma.
+        </li>
+      </ol>
+    </div>
+
+    <div class="thankyou-actions">
+      <a href="/" class="btn-secondary">Voltar ao site</a>
+      <a data-site-href="contactEmail" href="mailto:contato@petcarepro.com.br" class="btn-primary">
+        Falar com a equipe
+      </a>
+    </div>
+
+    <p class="thankyou-footnote">
+      Prefere não receber novidades? Responda ao e-mail de confirmação pedindo descadastro — seus dados serão removidos imediatamente, conforme nossa <a href="/privacidade">Política de Privacidade</a>.
+    </p>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-bottom" style="border-top: 1px solid var(--border);">
+    <p>© <span data-site="copyrightYear">2026</span> <span data-site="brand">PetCare Pro</span>. Todos os direitos reservados.</p>
+    <p>
+      <span data-site="legalName">PetCare Pro Tecnologia Ltda.</span> ·
+      CNPJ <span data-site="cnpj">00.000.000/0001-00</span> ·
+      <a href="mailto:contato@petcarepro.com.br"><span data-site="contactEmail">contato@petcarepro.com.br</span></a>
+    </p>
+  </div>
+</footer>
+
+<script>
+  // Evento de conversão disparado UMA VEZ por carregamento da página.
+  // Usa sessionStorage para evitar contar conversões duplicadas quando o
+  // usuário recarrega ou volta à página de obrigado manualmente.
+  (function () {
+    'use strict';
+    var qs = new URLSearchParams(window.location.search);
+    var status = qs.get('status') || 'unknown';
+    var source = qs.get('source') || 'unknown';
+
+    // Chave inclui o timestamp da sessão para que refresh dentro da mesma
+    // sessão não reconte, mas uma nova sessão (nova visita) sim.
+    var dedupKey = 'seupetbem_conv_' + status + '_' + source;
+    var alreadyTracked = false;
+    try { alreadyTracked = sessionStorage.getItem(dedupKey) === '1'; } catch (_) {}
+
+    if (!alreadyTracked) {
+      window.dataLayer = window.dataLayer || [];
+      // Evento primário de conversão. Configure um trigger no GTM que
+      // ouça `conversion` e dispare o pixel/evento da sua plataforma
+      // (GA4 `sign_up`, Meta Pixel `Lead`, Google Ads conversion, etc.).
+      window.dataLayer.push({
+        event: 'conversion',
+        conversion_type: 'waitlist_signup',
+        lead_status: status,
+        lead_source: source,
+        page_path: '/obrigado',
+      });
+      // Evento mais específico para o GA4 — `sign_up` é um evento
+      // recomendado e já aparece em relatórios por padrão.
+      window.dataLayer.push({
+        event: 'sign_up',
+        method: 'waitlist',
+        source: source,
+      });
+      try { sessionStorage.setItem(dedupKey, '1'); } catch (_) {}
+    }
+  })();
+</script>
+
+</body>
+</html>
