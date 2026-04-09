@@ -1,6 +1,6 @@
 /**
- * Lógica do painel PetCare Pro.
- * - Cuida da autenticação (redireciona para login se não houver token)
+ * LÃ³gica do painel PetCare Pro.
+ * - Cuida da autenticaÃ§Ã£o (redireciona para login se nÃ£o houver token)
  * - Navega entre as views
  * - Consome a API REST e renderiza as tabelas / modais
  */
@@ -11,7 +11,7 @@
     return;
   }
 
-  // ───────── Helpers ─────────
+  // âââââââââ Helpers âââââââââ
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
@@ -35,11 +35,11 @@
       localStorage.removeItem('petcare_token');
       localStorage.removeItem('petcare_user');
       window.location.href = '/login';
-      throw new Error('Sessão expirada');
+      throw new Error('SessÃ£o expirada');
     }
 
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Erro na requisição');
+    if (!res.ok) throw new Error(data.error || 'Erro na requisiÃ§Ã£o');
     return data;
   }
 
@@ -58,7 +58,7 @@
   }
 
   function formatDateTime(iso) {
-    if (!iso) return '–';
+    if (!iso) return 'â';
     const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'));
     if (isNaN(d.getTime())) return iso;
     return d.toLocaleString('pt-BR', {
@@ -77,7 +77,7 @@
     }[c]));
   }
 
-  // ───────── Navigation ─────────
+  // âââââââââ Navigation âââââââââ
   $$('.nav-item').forEach((btn) => {
     btn.addEventListener('click', () => {
       const view = btn.dataset.view;
@@ -91,14 +91,14 @@
     });
   });
 
-  // ───────── Logout ─────────
+  // âââââââââ Logout âââââââââ
   $('#logout-btn').addEventListener('click', () => {
     localStorage.removeItem('petcare_token');
     localStorage.removeItem('petcare_user');
     window.location.href = '/';
   });
 
-  // ───────── Modals ─────────
+  // âââââââââ Modals âââââââââ
   $$('[data-open-modal]').forEach((btn) => {
     btn.addEventListener('click', () => openModal(btn.dataset.openModal));
   });
@@ -123,21 +123,34 @@
     if (form) form.reset();
   }
 
-  // ───────── User header ─────────
+  // âââââââââ User header âââââââââ
   async function loadUser() {
+    // Try API first; fall back to cached user if bank was reset (no-persist /tmp)
+    let user;
     try {
-      const { user } = await api('/api/auth/me');
-      if (!user) throw new Error('Usuário não encontrado');
-      $('#user-name').textContent = user.name || '–';
-      $('#business-name').textContent = user.business_name || '–';
+      const data = await api('/api/auth/me');
+      user = data.user;
     } catch (err) {
-      // Erro de rede / 500: mostra toast. 401 já é tratado em api() (redireciona).
-      console.error(err);
-      toast('Não foi possível carregar seus dados. Tente novamente.', 'error');
+      // 401 already redirected inside api(). For 404/500 use cached data.
+      const cached = localStorage.getItem('petcare_user');
+      if (cached) {
+        try { user = JSON.parse(cached); } catch (_) {}
+      }
+      if (!user) {
+        console.error(err);
+        toast('Não foi possível carregar seus dados. Tente novamente.', 'error');
+        return;
+      }
     }
+    if (!user) {
+      toast('Não foi possível carregar seus dados. Tente novamente.', 'error');
+      return;
+    }
+    $('#user-name').textContent = user.name || '–';
+    $('#business-name').textContent = user.business_name || user.name || '–';
   }
 
-  // ───────── Overview ─────────
+  // âââââââââ Overview âââââââââ
   async function loadOverview() {
     try {
       const { stats, next_appointments } = await api('/api/dashboard/stats');
@@ -155,7 +168,7 @@
             (a) => `
             <div class="list-item">
               <div class="list-item-main">
-                <strong>${escapeHtml(a.pet_name)} · ${escapeHtml(a.service)}</strong>
+                <strong>${escapeHtml(a.pet_name)} Â· ${escapeHtml(a.service)}</strong>
                 <span>Tutor: ${escapeHtml(a.client_name)}</span>
               </div>
               <div class="list-item-time">${formatDateTime(a.scheduled_at)}</div>
@@ -168,7 +181,7 @@
     }
   }
 
-  // ───────── Clients ─────────
+  // âââââââââ Clients âââââââââ
   async function loadClients() {
     try {
       const { clients } = await api('/api/clients');
@@ -180,11 +193,11 @@
           (c) => `
           <tr>
             <td><strong>${escapeHtml(c.name)}</strong></td>
-            <td>${escapeHtml(c.email || '–')}</td>
-            <td>${escapeHtml(c.phone || '–')}</td>
+            <td>${escapeHtml(c.email || 'â')}</td>
+            <td>${escapeHtml(c.phone || 'â')}</td>
             <td>${c.pet_count}</td>
             <td>
-              <button class="btn-icon" data-delete-client="${c.id}" title="Excluir">🗑️</button>
+              <button class="btn-icon" data-delete-client="${c.id}" title="Excluir">ðï¸</button>
             </td>
           </tr>`
         )
@@ -198,7 +211,7 @@
   }
 
   async function deleteClient(id) {
-    if (!confirm('Excluir este cliente? Os pets e agendamentos relacionados também serão removidos.')) return;
+    if (!confirm('Excluir este cliente? Os pets e agendamentos relacionados tambÃ©m serÃ£o removidos.')) return;
     try {
       await api(`/api/clients/${id}`, { method: 'DELETE' });
       toast('Cliente removido');
@@ -227,7 +240,7 @@
     }
   });
 
-  // ───────── Pets ─────────
+  // âââââââââ Pets âââââââââ
   async function loadPets() {
     try {
       const { pets } = await api('/api/pets');
@@ -240,11 +253,11 @@
           <tr>
             <td><strong>${escapeHtml(p.name)}</strong></td>
             <td>${escapeHtml(p.species)}</td>
-            <td>${escapeHtml(p.breed || '–')}</td>
+            <td>${escapeHtml(p.breed || 'â')}</td>
             <td>${escapeHtml(p.client_name)}</td>
-            <td>${p.weight ? p.weight + ' kg' : '–'}</td>
+            <td>${p.weight ? p.weight + ' kg' : 'â'}</td>
             <td>
-              <button class="btn-icon" data-delete-pet="${p.id}" title="Excluir">🗑️</button>
+              <button class="btn-icon" data-delete-pet="${p.id}" title="Excluir">ðï¸</button>
             </td>
           </tr>`
         )
@@ -258,7 +271,7 @@
   }
 
   async function deletePet(id) {
-    if (!confirm('Excluir este pet? Os agendamentos relacionados também serão removidos.')) return;
+    if (!confirm('Excluir este pet? Os agendamentos relacionados tambÃ©m serÃ£o removidos.')) return;
     try {
       await api(`/api/pets/${id}`, { method: 'DELETE' });
       toast('Pet removido');
@@ -301,7 +314,7 @@
       notes: form.notes.value.trim(),
     };
     if (!body.client_id) {
-      toast('Selecione um tutor válido', 'error');
+      toast('Selecione um tutor vÃ¡lido', 'error');
       return;
     }
     try {
@@ -314,7 +327,7 @@
     }
   });
 
-  // ───────── Appointments ─────────
+  // âââââââââ Appointments âââââââââ
   async function loadAppointments() {
     try {
       const { appointments } = await api('/api/appointments');
@@ -333,9 +346,9 @@
             <td><span class="badge ${a.status}">${a.status}</span></td>
             <td>
               ${a.status === 'agendado'
-                ? `<button class="btn-icon btn-edit" data-done="${a.id}" title="Concluir">✓</button>`
+                ? `<button class="btn-icon btn-edit" data-done="${a.id}" title="Concluir">â</button>`
                 : ''}
-              <button class="btn-icon" data-delete-apt="${a.id}" title="Excluir">🗑️</button>
+              <button class="btn-icon" data-delete-apt="${a.id}" title="Excluir">ðï¸</button>
             </td>
           </tr>`
         )
@@ -357,7 +370,7 @@
         method: 'PUT',
         body: JSON.stringify({ status: 'concluido' }),
       });
-      toast('Agendamento concluído');
+      toast('Agendamento concluÃ­do');
       loadAppointments();
     } catch (err) {
       toast(err.message, 'error');
@@ -411,7 +424,7 @@
       notes: form.notes.value.trim(),
     };
     if (!body.pet_id) {
-      toast('Selecione um pet válido', 'error');
+      toast('Selecione um pet vÃ¡lido', 'error');
       return;
     }
     try {
@@ -424,7 +437,7 @@
     }
   });
 
-  // ───────── Init ─────────
+  // âââââââââ Init âââââââââ
   loadUser();
   loadOverview();
 })();
