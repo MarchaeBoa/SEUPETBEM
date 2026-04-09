@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard - PetCare Pro</title>
+  <meta name="robots" content="noindex, nofollow" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/app.css" />
+  <script src="/js/site-config.js"></script>
 </head>
 <body>
   <aside class="sidebar">
@@ -22,6 +24,9 @@
       </button>
       <button class="nav-item" data-view="appointments">
         <span class="nav-icon">📅</span> Agendamentos
+      </button>
+      <button class="nav-item" data-view="leads">
+        <span class="nav-icon">📬</span> Lista de espera
       </button>
     </nav>
     <div class="sidebar-user">
@@ -118,6 +123,51 @@
           <tbody id="pets-tbody"></tbody>
         </table>
         <div id="pets-empty" class="empty hidden">Nenhum pet cadastrado ainda.</div>
+      </div>
+    </section>
+
+    <!-- LEADS (lista de espera) -->
+    <section class="view" id="view-leads">
+      <header class="view-header">
+        <div>
+          <h1>Lista de espera</h1>
+          <p class="view-sub">Leads capturados pela landing page do pré-lançamento</p>
+        </div>
+      </header>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total de leads</div>
+          <div class="stat-value" id="stat-leads-total">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Últimos 7 dias</div>
+          <div class="stat-value" id="stat-leads-7d">0</div>
+        </div>
+        <div class="stat-card highlight">
+          <div class="stat-label">Últimos 30 dias</div>
+          <div class="stat-value" id="stat-leads-30d">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2 style="margin: 0;">Leads recentes</h2>
+          <button class="btn-secondary" id="leads-export-btn" type="button">Exportar CSV</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>E-mail</th>
+              <th>Nome</th>
+              <th>Negócio</th>
+              <th>Origem</th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody"></tbody>
+        </table>
+        <div id="leads-empty" class="empty hidden">Nenhum lead capturado ainda.</div>
       </div>
     </section>
 

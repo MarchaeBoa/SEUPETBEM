@@ -88,6 +88,7 @@
       if (view === 'clients') loadClients();
       if (view === 'pets') loadPets();
       if (view === 'appointments') loadAppointments();
+      if (view === 'leads') loadLeads();
     });
   });
 
@@ -423,6 +424,74 @@
       toast(err.message, 'error');
     }
   });
+
+  // ───────── Leads / Lista de espera ─────────
+  // A waitlist é um recurso global (não por tenant) — qualquer usuário
+  // autenticado consegue ver. Renderiza tabela + stats e oferece export CSV
+  // para o time de marketing/comercial trabalhar a lista fora do painel.
+  async function loadLeads() {
+    try {
+      const [listData, statsData] = await Promise.all([
+        api('/api/waitlist?limit=200'),
+        api('/api/waitlist/stats'),
+      ]);
+
+      $('#stat-leads-total').textContent = statsData.total || 0;
+      $('#stat-leads-7d').textContent = statsData.last_7_days || 0;
+      $('#stat-leads-30d').textContent = statsData.last_30_days || 0;
+
+      const leads = listData.leads || [];
+      const tbody = $('#leads-tbody');
+      $('#leads-empty').classList.toggle('hidden', leads.length > 0);
+      tbody.innerHTML = leads
+        .map(
+          (l) => `
+          <tr>
+            <td>${formatDateTime(l.created_at)}</td>
+            <td><strong>${escapeHtml(l.email)}</strong></td>
+            <td>${escapeHtml(l.name || '–')}</td>
+            <td>${escapeHtml(l.business_name || '–')}</td>
+            <td>${escapeHtml(l.source || '–')}${l.utm_source ? ' · ' + escapeHtml(l.utm_source) : ''}</td>
+          </tr>`
+        )
+        .join('');
+
+      // Guarda a última lista carregada para o botão de export.
+      state.leads = leads;
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  // Export CSV — gera no cliente a partir do state.leads.
+  // Escapa aspas duplicando-as, conforme RFC 4180.
+  function exportLeadsCsv() {
+    const leads = state.leads || [];
+    if (!leads.length) {
+      toast('Nada para exportar', 'error');
+      return;
+    }
+    const header = ['created_at', 'email', 'name', 'business_name', 'business_type', 'phone', 'source', 'utm_source', 'utm_medium', 'utm_campaign'];
+    const escape = (v) => {
+      if (v == null) return '';
+      const s = String(v);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    const rows = leads.map((l) => header.map((h) => escape(l[h])).join(','));
+    const csv = '\uFEFF' + header.join(',') + '\n' + rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `waitlist-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  const exportBtn = $('#leads-export-btn');
+  if (exportBtn) exportBtn.addEventListener('click', exportLeadsCsv);
 
   // ───────── Init ─────────
   loadUser();

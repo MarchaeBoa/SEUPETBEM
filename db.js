@@ -110,12 +110,32 @@ const SCHEMA_STATEMENTS = [
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
     FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
   )`,
+  // Waitlist / lista de espera de pré-lançamento. É a captura de lead
+  // "honesta" — não promete funcionalidades prontas, apenas reserva a vaga
+  // para quando a plataforma abrir para novos negócios.
+  `CREATE TABLE IF NOT EXISTS waitlist_leads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    name TEXT,
+    business_name TEXT,
+    business_type TEXT,
+    phone TEXT,
+    source TEXT,
+    utm_source TEXT,
+    utm_medium TEXT,
+    utm_campaign TEXT,
+    ip TEXT,
+    user_agent TEXT,
+    consent_marketing INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
   `CREATE INDEX IF NOT EXISTS idx_users_business ON users(business_id)`,
   `CREATE INDEX IF NOT EXISTS idx_clients_business ON clients(business_id)`,
   `CREATE INDEX IF NOT EXISTS idx_pets_client ON pets(client_id)`,
   `CREATE INDEX IF NOT EXISTS idx_pets_business ON pets(business_id)`,
   `CREATE INDEX IF NOT EXISTS idx_appointments_business ON appointments(business_id)`,
   `CREATE INDEX IF NOT EXISTS idx_appointments_scheduled ON appointments(scheduled_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_waitlist_created ON waitlist_leads(created_at)`,
 ];
 
 // Memoiza a inicialização: no ambiente serverless do Vercel, cada cold

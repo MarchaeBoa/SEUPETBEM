@@ -3,16 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PetCare Pro | Software de Gestão para Clínicas Veterinárias e Pet Shops</title>
-  <meta name="description" content="Sistema completo de gestão para clínicas veterinárias, pet shops e hotéis para pets. Agenda online, prontuário, financeiro e relatórios. Teste 14 dias grátis." />
+  <title>PetCare Pro | Gestão para clínicas veterinárias e pet shops</title>
+  <meta name="description" content="Plataforma de gestão para clínicas veterinárias, pet shops e hotéis para pets. Em fase de pré-lançamento — entre na lista de espera e seja um dos primeiros a testar." />
   <meta name="keywords" content="software veterinário, sistema para clínica veterinária, gestão pet shop, agenda online veterinária, prontuário eletrônico veterinário" />
   <meta name="robots" content="index, follow" />
   <meta property="og:title" content="PetCare Pro | Gestão completa para o mercado pet" />
-  <meta property="og:description" content="O sistema que clínicas veterinárias e pet shops usam para aumentar o faturamento e reduzir o trabalho operacional." />
+  <meta property="og:description" content="Plataforma de gestão para clínicas veterinárias e pet shops. Entre na lista de espera do pré-lançamento." />
   <meta property="og:type" content="website" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/landing.css" />
   <link rel="stylesheet" href="/css/chat-widget.css" />
+  <!-- site-config.js centraliza CNPJ/e-mails e inicializa o dataLayer/GTM.
+       Mantemos no <head> para que o dataLayer exista antes de qualquer
+       evento de tracking disparado por scripts inferiores na página. -->
+  <script src="/js/site-config.js"></script>
 </head>
 <body>
 
@@ -40,7 +44,7 @@
   </ul>
   <div class="nav-actions">
     <a href="/login" class="nav-login">Entrar</a>
-    <a href="/signup" class="nav-cta">Testar grátis</a>
+    <a href="#cta" class="nav-cta">Lista de espera</a>
   </div>
 </nav>
 
@@ -83,26 +87,42 @@
     <div class="hero-content">
       <div class="hero-badge">
         <span class="dot"></span>
-        Gestão completa para o mercado pet
+        Pré-lançamento · vagas limitadas
       </div>
-      <h1>O software de gestão feito para <em>clínicas veterinárias e pet shops</em></h1>
-      <p class="hero-lead">Agenda, cadastro de clientes e pets, agendamentos e visão do negócio em uma única plataforma. Menos planilhas e papel, mais tempo cuidando dos animais.</p>
-      <div class="hero-actions">
-        <a href="/signup" class="btn-primary">Começar teste de 14 dias</a>
-        <a href="#features" class="btn-secondary">Ver funcionalidades</a>
-      </div>
+      <h1>A gestão feita para <em>clínicas veterinárias e pet shops</em></h1>
+      <p class="hero-lead">Estamos em fase de pré-lançamento com as primeiras operações parceiras. Deixe seu e-mail para reservar sua vaga — avisamos assim que abrirmos novas inscrições, sem spam e sem compromisso.</p>
+
+      <!-- Formulário de captação da lista de espera. O submit é interceptado
+           pelo /js/waitlist.js, que chama POST /api/waitlist e redireciona
+           para /obrigado em caso de sucesso. -->
+      <form id="waitlist-form" class="waitlist-form" novalidate>
+        <label class="sr-only" for="waitlist-email">Seu melhor e-mail</label>
+        <input
+          type="email"
+          id="waitlist-email"
+          name="email"
+          placeholder="seu@email.com.br"
+          autocomplete="email"
+          required
+        />
+        <button type="submit" class="btn-primary" id="waitlist-submit">
+          Entrar na lista
+        </button>
+      </form>
+      <p id="waitlist-feedback" class="waitlist-feedback" role="status" aria-live="polite"></p>
+
       <ul class="hero-checks">
         <li>
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Sem cartão de crédito
+          Sem spam
         </li>
         <li>
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Implantação em 24h
+          Dados protegidos (LGPD)
         </li>
         <li>
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Cancele quando quiser
+          Cancele a qualquer momento
         </li>
       </ul>
     </div>
@@ -289,8 +309,8 @@
   <div class="steps">
     <div class="step">
       <div class="step-num">01</div>
-      <h3>Crie sua conta</h3>
-      <p>Cadastro simples em 2 minutos, sem cartão de crédito. Acesso imediato ao sistema completo.</p>
+      <h3>Entre na lista</h3>
+      <p>Deixe seu e-mail e conte um pouco sobre seu negócio. Retornamos em ordem de chegada assim que abrirmos o próximo lote de vagas.</p>
     </div>
     <div class="step">
       <div class="step-num">02</div>
@@ -314,9 +334,9 @@
 <!-- PRICING -->
 <section id="pricing">
   <div class="center">
-    <div class="section-label">Planos</div>
+    <div class="section-label">Planos previstos</div>
     <h2 class="section-title">Um plano certo para cada fase do seu negócio</h2>
-    <p class="section-sub">Comece grátis. Escale conforme crescer. Sem taxas ocultas e sem fidelidade.</p>
+    <p class="section-sub">Esta é a estrutura de planos que vamos disponibilizar no lançamento. Valores e limites podem ser ajustados conforme o feedback dos primeiros clientes.</p>
   </div>
   <div class="pricing-grid">
 
@@ -332,7 +352,7 @@
         <li>Relatórios essenciais</li>
         <li>Suporte por e-mail</li>
       </ul>
-      <a href="/signup" class="btn-plan">Começar grátis</a>
+      <a href="#cta" class="btn-plan">Entrar na lista</a>
     </div>
 
     <div class="pricing-card featured">
@@ -349,7 +369,7 @@
         <li>Relatórios avançados e BI</li>
         <li>Suporte prioritário por chat</li>
       </ul>
-      <a href="/signup" class="btn-plan">Começar grátis</a>
+      <a href="#cta" class="btn-plan">Entrar na lista</a>
     </div>
 
     <div class="pricing-card">
@@ -378,42 +398,54 @@
   </div>
   <div class="faq-list">
     <details>
-      <summary>Preciso instalar alguma coisa?</summary>
-      <p>Não. A PetCare Pro é 100% online e funciona em qualquer computador, tablet ou celular com acesso à internet. Basta criar sua conta e começar a usar.</p>
+      <summary>Em que fase o produto está?</summary>
+      <p>Estamos em pré-lançamento: já operamos com um grupo restrito de clínicas parceiras e abriremos novas vagas em lotes pequenos para garantir suporte dedicado a cada implantação. Quem entra na lista de espera é avisado em primeira mão, por ordem de chegada.</p>
     </details>
     <details>
-      <summary>Como funciona o período de teste de 14 dias?</summary>
-      <p>Você acessa todas as funcionalidades do plano Profissional por 14 dias, sem cadastrar cartão de crédito. Ao final, escolhe o plano ideal ou cancela sem cobrança.</p>
+      <summary>Quanto custa entrar na lista?</summary>
+      <p>Nada. A lista de espera é gratuita e sem compromisso. Só pedimos seu e-mail para avisar quando o próximo lote abrir — você decide se quer participar.</p>
+    </details>
+    <details>
+      <summary>Preciso instalar alguma coisa?</summary>
+      <p>Não. A PetCare Pro é 100% online e funciona em qualquer computador, tablet ou celular com acesso à internet.</p>
     </details>
     <details>
       <summary>Consigo migrar meus dados de outro sistema?</summary>
-      <p>Sim. Nossa equipe faz a migração gratuita de clientes, pets, agenda e histórico a partir de planilhas ou de qualquer sistema concorrente.</p>
-    </details>
-    <details>
-      <summary>Existe fidelidade ou multa para cancelar?</summary>
-      <p>Não há fidelidade. O contrato é mensal e você pode cancelar a qualquer momento pelo próprio painel, sem burocracia.</p>
+      <p>Sim. A equipe acompanha a migração de clientes, pets, agenda e histórico a partir de planilhas ou de outros sistemas durante a implantação.</p>
     </details>
     <details>
       <summary>O sistema atende pet shops, hotéis e creches?</summary>
-      <p>Sim. A plataforma foi desenhada para clínicas veterinárias, pet shops, hotéis para pets, creches, banho e tosa e day care, com módulos específicos para cada operação.</p>
+      <p>A plataforma foi desenhada para clínicas veterinárias, pet shops, hotéis para pets, creches, banho e tosa e day care. Conte-nos no cadastro qual é o seu caso — isso nos ajuda a priorizar as funcionalidades certas para você.</p>
     </details>
     <details>
       <summary>Meus dados estão seguros?</summary>
-      <p>Sim. Utilizamos criptografia, backups diários e infraestrutura em nuvem certificada. Estamos em conformidade com a LGPD.</p>
+      <p>Sim. Utilizamos hash de senha, transmissão HTTPS/TLS e estamos em conformidade com a LGPD. Para detalhes, veja nossa <a href="/privacidade">Política de Privacidade</a>.</p>
     </details>
   </div>
 </section>
 
-<!-- CTA -->
+<!-- CTA · lista de espera -->
 <section id="cta">
   <div class="cta-inner">
-    <div class="section-label dark-label">Pronto para começar?</div>
-    <h2 class="section-title light">Transforme a gestão do seu negócio hoje</h2>
-    <p class="section-sub light">Crie sua conta e comece a usar a plataforma agora, sem compromisso e sem cartão de crédito.</p>
-    <div class="cta-actions">
-      <a href="/signup" class="btn-primary cta-white">Testar 14 dias grátis</a>
-      <a href="#features" class="btn-secondary btn-ghost">Ver funcionalidades</a>
-    </div>
+    <div class="section-label dark-label">Pré-lançamento</div>
+    <h2 class="section-title light">Seja um dos primeiros a usar a PetCare Pro</h2>
+    <p class="section-sub light">Estamos abrindo vagas em lotes pequenos para garantir suporte dedicado em cada implantação. Deixe seu e-mail e avisamos assim que o próximo lote abrir.</p>
+
+    <form id="waitlist-form-cta" class="waitlist-form waitlist-form-cta" novalidate>
+      <label class="sr-only" for="waitlist-email-cta">Seu melhor e-mail</label>
+      <input
+        type="email"
+        id="waitlist-email-cta"
+        name="email"
+        placeholder="seu@email.com.br"
+        autocomplete="email"
+        required
+      />
+      <button type="submit" class="btn-primary cta-white" id="waitlist-submit-cta">
+        Entrar na lista
+      </button>
+    </form>
+    <p id="waitlist-feedback-cta" class="waitlist-feedback" role="status" aria-live="polite"></p>
   </div>
 </section>
 
@@ -458,11 +490,16 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2026 PetCare Pro. Todos os direitos reservados.</p>
-    <p>CNPJ 00.000.000/0001-00 · contato@petcarepro.com.br</p>
+    <p>© <span data-site="copyrightYear">2026</span> <span data-site="brand">PetCare Pro</span>. Todos os direitos reservados.</p>
+    <p>
+      <span data-site="legalName">PetCare Pro Tecnologia Ltda.</span> ·
+      CNPJ <span data-site="cnpj">00.000.000/0001-00</span> ·
+      <a data-site-href="contactEmail" href="mailto:contato@petcarepro.com.br"><span data-site="contactEmail">contato@petcarepro.com.br</span></a>
+    </p>
   </div>
 </footer>
 
+<script src="/js/waitlist.js" defer></script>
 <script src="/js/chat-widget.js" defer></script>
 </body>
 </html>

@@ -5,14 +5,16 @@ Stack simples e funcional: **Node.js + Express + Turso (libSQL) + HTML/CSS/JS va
 
 ## Funcionalidades
 
-- Landing page com planos, depoimentos e CTAs
+- Landing page de **pré-lançamento** com captura de lead (lista de espera)
+- Página de obrigado (`/obrigado`) rastreável por Google Tag Manager
 - Cadastro e login com JWT (bcrypt para hash de senha)
 - Arquitetura **multi-tenant**: cada negócio vê apenas seus próprios dados
-- Painel com visão geral (KPIs) e próximos agendamentos
+- Painel com visão geral (KPIs), próximos agendamentos e **view da lista de espera** (export CSV)
 - CRUD de **clientes (tutores)**
 - CRUD de **pets** vinculados ao tutor
 - CRUD de **agendamentos** com status (agendado / concluído / cancelado)
-- API REST JSON completa
+- **Política de Privacidade completa** hospedada em `/privacidade` (LGPD)
+- API REST JSON completa, incluindo endpoint público de captura de lead
 
 ## Rodando localmente
 
@@ -125,6 +127,63 @@ Todas as rotas (exceto `/api/auth/signup` e `/api/auth/login`) exigem o header
 | PUT    | `/api/appointments/:id`     | Atualiza agendamento         |
 | DELETE | `/api/appointments/:id`     | Remove agendamento           |
 | GET    | `/api/dashboard/stats`      | KPIs + próximos agendamentos |
+| POST   | `/api/waitlist`             | **Público** — captura de lead da lista de espera (idempotente por e-mail) |
+| GET    | `/api/waitlist`             | Lista leads (requer auth) — query `?limit=&offset=` |
+| GET    | `/api/waitlist/stats`       | Total + últimos 7 e 30 dias (requer auth) |
+
+### POST /api/waitlist — payload
+
+Todos os campos são opcionais exceto `email`. O endpoint é idempotente:
+reenviar o mesmo e-mail atualiza os campos fornecidos sem apagar os
+existentes (usa `COALESCE` no UPDATE).
+
+```json
+{
+  "email": "ana@clinicaexemplo.com.br",
+  "name": "Ana Silva",
+  "business_name": "Clínica Pet Feliz",
+  "business_type": "clinica",
+  "phone": "11999999999",
+  "source": "hero",
+  "utm_source": "google",
+  "utm_medium": "cpc",
+  "utm_campaign": "prelancamento-2026",
+  "consent_marketing": true
+}
+```
+
+## Configuração do site (CNPJ, GTM, e-mails)
+
+Os dados institucionais (razão social, CNPJ, endereço, e-mails) e o ID
+do Google Tag Manager estão **centralizados** em
+[`public/js/site-config.js`](public/js/site-config.js). Atualize apenas
+esse arquivo antes do lançamento:
+
+```js
+legalName: 'Sua Razão Social Ltda.',
+cnpj: '12.345.678/0001-90',
+contactEmail: 'contato@seudominio.com.br',
+gtmId: 'GTM-XXXXXXX', // deixe null em dev para não carregar o container
+```
+
+Todo elemento HTML com `data-site="<chave>"` recebe o valor correspondente
+automaticamente no DOMContentLoaded — isso mantém rodapés, páginas legais
+e página de obrigado sempre em sincronia.
+
+## Tracking e conversões (GTM + dataLayer)
+
+A captura de lead dispara dois eventos no `dataLayer` da página de obrigado:
+
+| Evento          | Quando                      | Params relevantes                                  |
+|-----------------|-----------------------------|----------------------------------------------------|
+| `lead_submit`   | No submit do formulário     | `source`, `status` (created / updated)             |
+| `conversion`    | Ao carregar `/obrigado`     | `conversion_type=waitlist_signup`, `lead_source`   |
+| `sign_up`       | Ao carregar `/obrigado`     | `method=waitlist`, `source` — evento recomendado GA4 |
+
+Configure os triggers no GTM para disparar os pixels da sua plataforma
+(GA4 `sign_up`, Meta Pixel `Lead`, Google Ads conversion, etc.) a partir
+desses eventos. A página `/obrigado` usa `sessionStorage` para evitar
+dupla contagem em refresh.
 
 ## Próximos passos (ideias)
 
