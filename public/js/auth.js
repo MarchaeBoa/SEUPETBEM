@@ -8,9 +8,35 @@
   const alertBox = document.getElementById('alert');
   const submitBtn = document.getElementById('submit-btn');
 
+  // Helper seguro para localStorage — em modo privado/algumas extensões
+  // acessar localStorage pode lançar exceção e quebrar toda a página.
+  const storage = {
+    get(key) {
+      try { return localStorage.getItem(key); } catch (_) { return null; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(key, value); return true; } catch (_) { return false; }
+    },
+    remove(key) {
+      try { localStorage.removeItem(key); } catch (_) {}
+    },
+  };
+
+  // Health check proativo: se o backend estiver inacessível, mostra um banner
+  // imediato para o usuário saber que precisa iniciar o servidor antes de tentar logar.
+  fetch('/api/health', { method: 'GET' })
+    .then((res) => {
+      if (!res.ok) throw new Error('health not ok');
+    })
+    .catch(() => {
+      showError(
+        'Backend offline. Inicie o servidor com "npm start" e recarregue esta página.'
+      );
+    });
+
   // Se já existe token, valida no servidor antes de redirecionar.
   // Evita loop quando o token é inválido/expirado (stale).
-  const existingToken = localStorage.getItem('petcare_token');
+  const existingToken = storage.get('petcare_token');
   if (existingToken) {
     fetch('/api/auth/me', {
       headers: { Authorization: `Bearer ${existingToken}` },
@@ -20,14 +46,14 @@
           window.location.href = '/dashboard';
         } else {
           // Token inválido/expirado — limpa e mantém usuário no formulário
-          localStorage.removeItem('petcare_token');
-          localStorage.removeItem('petcare_user');
+          storage.remove('petcare_token');
+          storage.remove('petcare_user');
         }
       })
       .catch(() => {
         // Backend offline — remove o token para evitar loop e deixa o usuário tentar logar
-        localStorage.removeItem('petcare_token');
-        localStorage.removeItem('petcare_user');
+        storage.remove('petcare_token');
+        storage.remove('petcare_user');
       });
   }
 
@@ -54,7 +80,7 @@
     } catch (networkErr) {
       // Falha de rede (servidor offline, DNS, CORS, etc.)
       throw new Error(
-        'Não foi possível conectar ao servidor. Verifique sua conexão ou se o backend está rodando.'
+        'Backend offline. Inicie o servidor com "npm start" no terminal e tente novamente.'
       );
     }
 
@@ -75,8 +101,11 @@
     if (!data || !data.token || !data.user) {
       throw new Error('Resposta inválida do servidor');
     }
-    localStorage.setItem('petcare_token', data.token);
-    localStorage.setItem('petcare_user', JSON.stringify(data.user));
+    const ok = storage.set('petcare_token', data.token) &&
+               storage.set('petcare_user', JSON.stringify(data.user));
+    if (!ok) {
+      throw new Error('Não foi possível salvar a sessão (localStorage bloqueado?).');
+    }
   }
 
   if (loginForm) {

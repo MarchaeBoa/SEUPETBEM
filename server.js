@@ -17,6 +17,7 @@ const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -63,6 +64,8 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
-app.listen(PORT, () => {
-  console.log(`PetCare Pro rodando em http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
+  console.log(`PetCare Pro rodando em http://${displayHost}:${PORT}`);
+  console.log(`Abra http://${displayHost}:${PORT}/login para acessar`);
 });
