@@ -1,40 +1,50 @@
 /**
- * Inicialização e schema do banco SQLite.
- * Cria o arquivo e as tabelas automaticamente na primeira execução.
+ * Cliente de banco via @libsql/client (Turso).
+ *
+ * - Em produção (Vercel): usa Turso — banco SQLite distribuído gerenciado.
+ *   Basta configurar TURSO_DATABASE_URL e TURSO_AUTH_TOKEN.
+ * - Em desenvolvimento: se as variáveis do Turso não estiverem definidas,
+ *   cai num arquivo SQLite local (`file:./data/petcare.db`), o que mantém
+ *   o fluxo de `npm start` sem dependências externas.
+ *
+ * A API do libsql é assíncrona: todas as queries retornam `Promise`. Quem
+ * importar este módulo deve usar `await db.execute(...)`.
  */
 const path = require('path');
 const fs = require('fs');
-const Database = require('better-sqlite3');
+const { createClient } = require('@libsql/client');
 
-// Em serverless (Vercel) o sistema de arquivos é somente leitura, exceto /tmp.
-// Usamos /tmp como fallback para que a aplicação suba sem crashar. ATENÇÃO:
-// /tmp é efêmero entre invocações — para produção, use um banco gerenciado.
-const DEFAULT_DB_PATH = process.env.VERCEL
-  ? '/tmp/petcare.db'
-  : path.join(__dirname, 'data', 'petcare.db');
+const url =
+  process.env.TURSO_DATABASE_URL ||
+  process.env.DATABASE_URL ||
+  'file:./data/petcare.db';
 
-const DB_PATH = process.env.DATABASE_PATH || DEFAULT_DB_PATH;
+const authToken = process.env.TURSO_AUTH_TOKEN;
 
-// Garante que a pasta do banco existe
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-
-const db = new Database(DB_PATH);
-// WAL não é suportado em /tmp em todos os ambientes serverless; mantemos
-// o modo padrão (DELETE) quando rodando no Vercel.
-if (!process.env.VERCEL) {
-  db.pragma('journal_mode = WAL');
+// Para URLs `file:` o libsql não cria diretórios pais automaticamente —
+// garantimos que a pasta existe antes de abrir o banco local. No Vercel,
+// onde só /tmp é gravável, recomende Turso (TURSO_DATABASE_URL) ou use um
+// caminho em /tmp via DATABASE_URL.
+if (url.startsWith('file:')) {
+  const filePath = url.slice('file:'.length);
+  const dir = path.dirname(filePath);
+  if (dir && dir !== '.') {
+    fs.mkdirSync(dir, { recursive: true });
+  }
 }
-db.pragma('foreign_keys = ON');
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS businesses (
+const db = createClient({ url, authToken });
+
+// Declarações do schema. Cada entrada é executada isoladamente porque
+// `db.execute` aceita apenas uma statement por chamada.
+const SCHEMA_STATEMENTS = [
+  `CREATE TABLE IF NOT EXISTS businesses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     plan TEXT NOT NULL DEFAULT 'starter',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS users (
+  )`,
+  `CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     business_id INTEGER NOT NULL,
     name TEXT NOT NULL,
@@ -43,9 +53,8 @@ db.exec(`
     role TEXT NOT NULL DEFAULT 'owner',
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
-  );
-
-  CREATE TABLE IF NOT EXISTS clients (
+  )`,
+  `CREATE TABLE IF NOT EXISTS clients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     business_id INTEGER NOT NULL,
     name TEXT NOT NULL,
@@ -54,9 +63,8 @@ db.exec(`
     address TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
-  );
-
-  CREATE TABLE IF NOT EXISTS pets (
+  )`,
+  `CREATE TABLE IF NOT EXISTS pets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     business_id INTEGER NOT NULL,
     client_id INTEGER NOT NULL,
@@ -69,9 +77,8 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
     FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
-  );
-
-  CREATE TABLE IF NOT EXISTS appointments (
+  )`,
+  `CREATE TABLE IF NOT EXISTS appointments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     business_id INTEGER NOT NULL,
     pet_id INTEGER NOT NULL,
@@ -83,14 +90,33 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
     FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
-  );
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_users_business ON users(business_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_clients_business ON clients(business_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_pets_client ON pets(client_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_pets_business ON pets(business_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_appointments_business ON appointments(business_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_appointments_scheduled ON appointments(scheduled_at)`,
+];
 
-  CREATE INDEX IF NOT EXISTS idx_users_business ON users(business_id);
-  CREATE INDEX IF NOT EXISTS idx_clients_business ON clients(business_id);
-  CREATE INDEX IF NOT EXISTS idx_pets_client ON pets(client_id);
-  CREATE INDEX IF NOT EXISTS idx_pets_business ON pets(business_id);
-  CREATE INDEX IF NOT EXISTS idx_appointments_business ON appointments(business_id);
-  CREATE INDEX IF NOT EXISTS idx_appointments_scheduled ON appointments(scheduled_at);
-`);
+// Memoiza a inicialização: no ambiente serverless do Vercel, cada cold
+// start chama `init()` uma única vez e as invocações seguintes reusam a
+// mesma Promise (resolvida).
+let initPromise = null;
+function init() {
+  if (!initPromise) {
+    initPromise = (async () => {
+      for (const stmt of SCHEMA_STATEMENTS) {
+        await db.execute(stmt);
+      }
+    })().catch((err) => {
+      // Em caso de falha, limpa o cache para permitir nova tentativa
+      // na próxima requisição (ex.: falha transitória de rede).
+      initPromise = null;
+      throw err;
+    });
+  }
+  return initPromise;
+}
 
-module.exports = db;
+module.exports = { db, init };

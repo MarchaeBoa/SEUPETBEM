@@ -6,8 +6,8 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 
-// Inicializa o banco (cria tabelas na primeira execução)
-require('./db');
+// Cliente libsql (Turso) + função de inicialização idempotente do schema.
+const { init: initDb } = require('./db');
 
 const authRoutes = require('./routes/auth');
 const clientRoutes = require('./routes/clients');
@@ -29,6 +29,13 @@ app.use(
     extensions: ['html'],
   })
 );
+
+// Garante que o schema do banco existe antes de atender qualquer rota de API.
+// Em serverless (cold start) `initDb()` roda apenas na primeira invocação —
+// chamadas seguintes reutilizam a mesma Promise (memoizada em db.js).
+app.use('/api', (req, res, next) => {
+  initDb().then(() => next()).catch(next);
+});
 
 // API
 app.use('/api/auth', authRoutes);
