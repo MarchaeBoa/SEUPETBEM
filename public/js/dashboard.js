@@ -7,7 +7,7 @@
 (function () {
   const token = localStorage.getItem('petcare_token');
   if (!token) {
-    window.location.href = '/login.html';
+    window.location.href = '/login';
     return;
   }
 
@@ -34,7 +34,7 @@
     if (res.status === 401) {
       localStorage.removeItem('petcare_token');
       localStorage.removeItem('petcare_user');
-      window.location.href = '/login.html';
+      window.location.href = '/login';
       throw new Error('Sessão expirada');
     }
 
