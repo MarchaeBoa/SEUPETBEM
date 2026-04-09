@@ -467,40 +467,6 @@ nav {
 .tag-blue { background: #EFF6FF; color: #1D4ED8; }
 .tag-gray { background: var(--bg-soft); color: var(--muted); }
 
-/* ── TRUST LOGOS ── */
-.trust {
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 44px 6%;
-  background: var(--white);
-}
-.trust-label {
-  text-align: center;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 22px;
-}
-.trust-logos {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 48px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-.trust-logos span {
-  font-weight: 800;
-  font-size: 1.15rem;
-  color: var(--border-strong);
-  letter-spacing: -0.01em;
-  transition: color .2s;
-}
-.trust-logos span:hover { color: var(--muted); }
-
 /* ── SECTIONS ── */
 section { padding: 100px 6%; }
 .section-label {
@@ -665,63 +631,6 @@ section { padding: 100px 6%; }
   color: var(--text-light);
   font-size: 0.92rem;
   line-height: 1.6;
-}
-
-/* ── TESTIMONIALS ── */
-#testimonials { background: var(--bg); }
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-  margin-top: 60px;
-  max-width: 1240px;
-  margin-left: auto;
-  margin-right: auto;
-}
-.testimonial-card {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 32px 28px;
-  transition: box-shadow .2s;
-}
-.testimonial-card:hover { box-shadow: var(--shadow); }
-.stars {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 18px;
-}
-.testimonial-card p {
-  font-size: 1rem;
-  color: var(--text);
-  margin-bottom: 24px;
-  line-height: 1.7;
-  font-weight: 500;
-}
-.author { display: flex; align-items: center; gap: 14px; }
-.avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.88rem;
-  color: #fff;
-  font-weight: 700;
-  flex-shrink: 0;
-  letter-spacing: 0.02em;
-}
-.author-info strong {
-  display: block;
-  font-size: 0.93rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-.author-info span {
-  font-size: 0.82rem;
-  color: var(--muted);
 }
 
 /* ── PRICING ── */
@@ -1127,8 +1036,6 @@ footer {
   .hero-lead { font-size: 1rem; }
   .btn-primary, .btn-secondary { width: 100%; text-align: center; }
   .hero-actions { flex-direction: column; width: 100%; }
-  .trust-logos { gap: 28px; }
-  .trust-logos span { font-size: 1rem; }
   .mock-kpis { grid-template-columns: 1fr; }
   .footer-top { grid-template-columns: 1fr; }
   .footer-bottom { flex-direction: column; text-align: center; }
