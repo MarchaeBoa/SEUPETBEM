@@ -17,7 +17,7 @@
     })
       .then((res) => {
         if (res.ok) {
-          window.location.href = '/dashboard.html';
+          window.location.href = '/dashboard';
         } else {
           // Token inválido/expirado — limpa e mantém usuário no formulário
           localStorage.removeItem('petcare_token');
@@ -93,7 +93,7 @@
         }
         const data = await postJSON('/api/auth/login', { email, password });
         persistSession(data);
-        window.location.href = '/dashboard.html';
+        window.location.href = '/dashboard';
       } catch (err) {
         showError(err.message);
         submitBtn.disabled = false;
@@ -128,7 +128,7 @@
           password,
         });
         persistSession(data);
-        window.location.href = '/dashboard.html';
+        window.location.href = '/dashboard';
       } catch (err) {
         showError(err.message);
         submitBtn.disabled = false;
