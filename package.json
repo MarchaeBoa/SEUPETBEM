@@ -1,0 +1,28 @@
+{
+  "name": "petcare-pro",
+  "version": "1.0.0",
+  "description": "PetCare Pro - SaaS completa para clínicas, pet shops e hoteleiras",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "saas",
+    "petshop",
+    "veterinaria",
+    "agendamento"
+  ],
+  "author": "PetCare Pro",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

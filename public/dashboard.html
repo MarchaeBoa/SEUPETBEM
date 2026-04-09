@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - PetCare Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <a href="/" class="sidebar-logo"><span>🐾</span> PetCare Pro</a>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="overview">
+        <span class="nav-icon">📊</span> Visão geral
+      </button>
+      <button class="nav-item" data-view="clients">
+        <span class="nav-icon">👥</span> Clientes
+      </button>
+      <button class="nav-item" data-view="pets">
+        <span class="nav-icon">🐶</span> Pets
+      </button>
+      <button class="nav-item" data-view="appointments">
+        <span class="nav-icon">📅</span> Agendamentos
+      </button>
+    </nav>
+    <div class="sidebar-user">
+      <div id="user-info">
+        <strong id="user-name">–</strong>
+        <span id="business-name">–</span>
+      </div>
+      <button id="logout-btn" class="btn-logout">Sair</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- OVERVIEW -->
+    <section class="view active" id="view-overview">
+      <header class="view-header">
+        <div>
+          <h1>Visão geral</h1>
+          <p class="view-sub">Resumo do seu negócio em tempo real</p>
+        </div>
+      </header>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Clientes</div>
+          <div class="stat-value" id="stat-clients">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pets cadastrados</div>
+          <div class="stat-value" id="stat-pets">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Agendamentos futuros</div>
+          <div class="stat-value" id="stat-upcoming">0</div>
+        </div>
+        <div class="stat-card highlight">
+          <div class="stat-label">Faturamento do mês</div>
+          <div class="stat-value" id="stat-month-revenue">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Próximos agendamentos</h2>
+        <div id="next-appointments" class="list"></div>
+      </div>
+    </section>
+
+    <!-- CLIENTS -->
+    <section class="view" id="view-clients">
+      <header class="view-header">
+        <div>
+          <h1>Clientes</h1>
+          <p class="view-sub">Gerencie a sua base de tutores</p>
+        </div>
+        <button class="btn-primary" data-open-modal="client-modal">+ Novo cliente</button>
+      </header>
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Telefone</th>
+              <th>Pets</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="clients-tbody"></tbody>
+        </table>
+        <div id="clients-empty" class="empty hidden">Nenhum cliente cadastrado ainda.</div>
+      </div>
+    </section>
+
+    <!-- PETS -->
+    <section class="view" id="view-pets">
+      <header class="view-header">
+        <div>
+          <h1>Pets</h1>
+          <p class="view-sub">Todos os pets da sua base</p>
+        </div>
+        <button class="btn-primary" data-open-modal="pet-modal">+ Novo pet</button>
+      </header>
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Espécie</th>
+              <th>Raça</th>
+              <th>Tutor</th>
+              <th>Peso</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="pets-tbody"></tbody>
+        </table>
+        <div id="pets-empty" class="empty hidden">Nenhum pet cadastrado ainda.</div>
+      </div>
+    </section>
+
+    <!-- APPOINTMENTS -->
+    <section class="view" id="view-appointments">
+      <header class="view-header">
+        <div>
+          <h1>Agendamentos</h1>
+          <p class="view-sub">Agenda completa do negócio</p>
+        </div>
+        <button class="btn-primary" data-open-modal="appointment-modal">+ Novo agendamento</button>
+      </header>
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Pet</th>
+              <th>Tutor</th>
+              <th>Serviço</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="appointments-tbody"></tbody>
+        </table>
+        <div id="appointments-empty" class="empty hidden">Nenhum agendamento registrado.</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: CLIENT -->
+  <div class="modal" id="client-modal">
+    <div class="modal-content">
+      <button class="modal-close" data-close-modal>&times;</button>
+      <h2>Novo cliente</h2>
+      <form id="client-form">
+        <div class="form-group">
+          <label>Nome *</label>
+          <input type="text" name="name" required />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" />
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="tel" name="phone" placeholder="(11) 99999-9999" />
+        </div>
+        <div class="form-group">
+          <label>Endereço</label>
+          <input type="text" name="address" />
+        </div>
+        <button type="submit" class="btn-primary btn-full">Salvar cliente</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PET -->
+  <div class="modal" id="pet-modal">
+    <div class="modal-content">
+      <button class="modal-close" data-close-modal>&times;</button>
+      <h2>Novo pet</h2>
+      <form id="pet-form">
+        <div class="form-group">
+          <label>Tutor *</label>
+          <select name="client_id" id="pet-client-select" required></select>
+        </div>
+        <div class="form-group">
+          <label>Nome do pet *</label>
+          <input type="text" name="name" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Espécie *</label>
+            <select name="species" required>
+              <option value="">Selecione</option>
+              <option value="Cachorro">Cachorro</option>
+              <option value="Gato">Gato</option>
+              <option value="Ave">Ave</option>
+              <option value="Roedor">Roedor</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Raça</label>
+            <input type="text" name="breed" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nascimento</label>
+            <input type="date" name="birth_date" />
+          </div>
+          <div class="form-group">
+            <label>Peso (kg)</label>
+            <input type="number" name="weight" step="0.1" min="0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Observações</label>
+          <textarea name="notes" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn-primary btn-full">Salvar pet</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: APPOINTMENT -->
+  <div class="modal" id="appointment-modal">
+    <div class="modal-content">
+      <button class="modal-close" data-close-modal>&times;</button>
+      <h2>Novo agendamento</h2>
+      <form id="appointment-form">
+        <div class="form-group">
+          <label>Pet *</label>
+          <select name="pet_id" id="appointment-pet-select" required></select>
+        </div>
+        <div class="form-group">
+          <label>Serviço *</label>
+          <input type="text" name="service" required placeholder="Ex: Banho e tosa" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data e hora *</label>
+            <input type="datetime-local" name="scheduled_at" required />
+          </div>
+          <div class="form-group">
+            <label>Valor (R$)</label>
+            <input type="number" name="price" step="0.01" min="0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Observações</label>
+          <textarea name="notes" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn-primary btn-full">Salvar agendamento</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
