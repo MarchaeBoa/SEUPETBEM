@@ -6,8 +6,7 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 
-// Inicializa o banco (cria tabelas na primeira execução)
-require('./db');
+const { ensureSchema } = require('./db');
 
 const authRoutes = require('./routes/auth');
 const clientRoutes = require('./routes/clients');
@@ -21,6 +20,18 @@ const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Garante o schema do Postgres antes de qualquer rota de API. A primeira
+// requisição paga o custo da criação idempotente; as seguintes reusam a
+// mesma Promise memoizada em db.js (um schema init por cold-start).
+app.use('/api', async (_req, _res, next) => {
+  try {
+    await ensureSchema();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Arquivos estáticos — `extensions: ['html']` permite que URLs limpas
 // (sem `.html`) sejam resolvidas automaticamente: /dashboard → dashboard.html

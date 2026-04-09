@@ -1,96 +1,117 @@
 /**
- * Inicialização e schema do banco SQLite.
- * Cria o arquivo e as tabelas automaticamente na primeira execução.
+ * Cliente Postgres (Neon) + inicialização idempotente do schema.
+ *
+ * Usamos o driver HTTP `@neondatabase/serverless`, que é o indicado para
+ * ambientes serverless (Vercel, Cloudflare Workers etc.): não abre conexões
+ * persistentes, não precisa de pool e funciona sobre fetch.
  */
-const path = require('path');
-const fs = require('fs');
-const Database = require('better-sqlite3');
+const { neon } = require('@neondatabase/serverless');
 
-// Em serverless (Vercel) o sistema de arquivos é somente leitura, exceto /tmp.
-// Usamos /tmp como fallback para que a aplicação suba sem crashar. ATENÇÃO:
-// /tmp é efêmero entre invocações — para produção, use um banco gerenciado.
-const DEFAULT_DB_PATH = process.env.VERCEL
-  ? '/tmp/petcare.db'
-  : path.join(__dirname, 'data', 'petcare.db');
-
-const DB_PATH = process.env.DATABASE_PATH || DEFAULT_DB_PATH;
-
-// Garante que a pasta do banco existe
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-
-const db = new Database(DB_PATH);
-// WAL não é suportado em /tmp em todos os ambientes serverless; mantemos
-// o modo padrão (DELETE) quando rodando no Vercel.
-if (!process.env.VERCEL) {
-  db.pragma('journal_mode = WAL');
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  throw new Error(
+    'DATABASE_URL não definida. Configure a variável de ambiente com a ' +
+      'connection string do Neon (ex.: postgresql://user:pass@host/db?sslmode=require).'
+  );
 }
-db.pragma('foreign_keys = ON');
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS businesses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    plan TEXT NOT NULL DEFAULT 'starter',
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
+const sql = neon(DATABASE_URL);
 
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    business_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'owner',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
-  );
+/**
+ * Executa uma query parametrizada ($1, $2, ...) e retorna sempre um array de linhas.
+ * Compatível tanto com o modo default quanto com `fullResults: true`.
+ */
+async function query(text, params = []) {
+  const result = await sql.query(text, params);
+  if (Array.isArray(result)) return result;
+  if (result && Array.isArray(result.rows)) return result.rows;
+  return [];
+}
 
-  CREATE TABLE IF NOT EXISTS clients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    business_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    email TEXT,
-    phone TEXT,
-    address TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
-  );
+/** Retorna a primeira linha ou `null`. */
+async function queryOne(text, params = []) {
+  const rows = await query(text, params);
+  return rows[0] || null;
+}
 
-  CREATE TABLE IF NOT EXISTS pets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    business_id INTEGER NOT NULL,
-    client_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    species TEXT NOT NULL,
-    breed TEXT,
-    birth_date TEXT,
-    weight REAL,
-    notes TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
-    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
-  );
+// ─── Schema ───────────────────────────────────────────────────────────────
+// Criação idempotente do schema. Roda no máximo uma vez por instância da
+// function (cold-start). Requisições paralelas compartilham a mesma Promise.
+let schemaReadyPromise = null;
 
-  CREATE TABLE IF NOT EXISTS appointments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    business_id INTEGER NOT NULL,
-    pet_id INTEGER NOT NULL,
-    service TEXT NOT NULL,
-    scheduled_at TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'agendado',
-    price REAL DEFAULT 0,
-    notes TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
-    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
-  );
+function ensureSchema() {
+  if (!schemaReadyPromise) {
+    schemaReadyPromise = (async () => {
+      await sql`
+        CREATE TABLE IF NOT EXISTS businesses (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          plan TEXT NOT NULL DEFAULT 'starter',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL UNIQUE,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'owner',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS clients (
+          id SERIAL PRIMARY KEY,
+          business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          address TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS pets (
+          id SERIAL PRIMARY KEY,
+          business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+          client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          species TEXT NOT NULL,
+          breed TEXT,
+          birth_date TEXT,
+          weight REAL,
+          notes TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS appointments (
+          id SERIAL PRIMARY KEY,
+          business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+          pet_id INTEGER NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+          service TEXT NOT NULL,
+          scheduled_at TIMESTAMPTZ NOT NULL,
+          status TEXT NOT NULL DEFAULT 'agendado',
+          price REAL NOT NULL DEFAULT 0,
+          notes TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_business ON users(business_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_clients_business ON clients(business_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_pets_client ON pets(client_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_pets_business ON pets(business_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_appointments_business ON appointments(business_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_appointments_scheduled ON appointments(scheduled_at)`;
+    })().catch((err) => {
+      // Em caso de falha, zera o cache para tentar de novo na próxima requisição.
+      schemaReadyPromise = null;
+      throw err;
+    });
+  }
+  return schemaReadyPromise;
+}
 
-  CREATE INDEX IF NOT EXISTS idx_users_business ON users(business_id);
-  CREATE INDEX IF NOT EXISTS idx_clients_business ON clients(business_id);
-  CREATE INDEX IF NOT EXISTS idx_pets_client ON pets(client_id);
-  CREATE INDEX IF NOT EXISTS idx_pets_business ON pets(business_id);
-  CREATE INDEX IF NOT EXISTS idx_appointments_business ON appointments(business_id);
-  CREATE INDEX IF NOT EXISTS idx_appointments_scheduled ON appointments(scheduled_at);
-`);
-
-module.exports = db;
+module.exports = { sql, query, queryOne, ensureSchema };
