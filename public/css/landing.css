@@ -276,19 +276,21 @@ nav {
 .hero h1 em {
   font-style: normal;
   color: var(--accent-dark);
-  position: relative;
-  white-space: nowrap;
-}
-.hero h1 em::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 4px;
-  height: 10px;
-  background: rgba(16, 185, 129, .18);
-  z-index: -1;
-  border-radius: 4px;
+  /* Destaque verde aplicado via background para funcionar quando o texto
+     quebra em múltiplas linhas. box-decoration-break garante que o efeito
+     seja replicado em cada linha ao invés de esticar por todo o bloco. */
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 65%,
+    rgba(16, 185, 129, .22) 65%,
+    rgba(16, 185, 129, .22) 92%,
+    transparent 92%
+  );
+  background-repeat: no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 2px;
 }
 .hero-lead {
   font-size: 1.1rem;
