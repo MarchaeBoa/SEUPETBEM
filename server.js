@@ -52,6 +52,11 @@ app.get(['/dashboard', '/app', '/painel'], sendPage('dashboard.html'));
 app.get('/login', sendPage('login.html'));
 app.get(['/signup', '/cadastro'], sendPage('signup.html'));
 
+// Páginas legais (Termos, Privacidade, LGPD)
+app.get('/termos', sendPage('termos.html'));
+app.get(['/privacidade', '/politica-de-privacidade'], sendPage('privacidade.html'));
+app.get('/lgpd', sendPage('lgpd.html'));
+
 // Tratamento global de erros
 app.use((err, _req, res, _next) => {
   console.error('[error]', err);
