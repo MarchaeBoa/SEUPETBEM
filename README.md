@@ -1,7 +1,7 @@
 # PetCare Pro
 
 SaaS completa para clínicas veterinárias, pet shops e hoteleiras.
-Stack simples e funcional: **Node.js + Express + SQLite + HTML/CSS/JS vanilla**.
+Stack simples e funcional: **Node.js + Express + Turso (libSQL) + HTML/CSS/JS vanilla**.
 
 ## Funcionalidades
 
@@ -36,17 +36,42 @@ A aplicação sobe em `http://localhost:3000`.
 - Login: `/login.html`
 - Painel: `/dashboard.html`
 
-O banco SQLite é criado automaticamente em `./data/petcare.db` na primeira
-execução (a pasta `data/` está ignorada pelo git).
+Por padrão, em desenvolvimento o banco é um arquivo libSQL local criado
+automaticamente em `./data/petcare.db` na primeira execução (a pasta `data/`
+está ignorada pelo git).
+
+## Banco de dados — Turso (produção)
+
+O projeto usa [`@libsql/client`](https://github.com/tursodatabase/libsql-client-ts),
+o driver oficial do Turso (SQLite distribuído e gerenciado na nuvem). A mesma
+base de código roda contra um arquivo local em dev e contra um banco Turso em
+produção — basta trocar variáveis de ambiente.
+
+### Passo a passo
+
+1. Crie um banco gratuito em [turso.tech](https://turso.tech) e gere um auth
+   token.
+2. No **Vercel Dashboard → Settings → Environment Variables**, adicione:
+   - `TURSO_DATABASE_URL` (ex.: `libsql://seu-banco.turso.io`)
+   - `TURSO_AUTH_TOKEN` (o token gerado)
+   - `JWT_SECRET` (chave aleatória para assinar JWTs)
+3. Faça o deploy — o schema (`businesses`, `users`, `clients`, `pets`,
+   `appointments`) é criado automaticamente na primeira requisição via
+   `CREATE TABLE IF NOT EXISTS`.
+
+Se `TURSO_DATABASE_URL` não estiver definida, o app cai no arquivo local
+`file:./data/petcare.db`, o que mantém `npm start` funcionando sem
+dependências externas.
 
 ## Estrutura
 
 ```
 SEUPETBEM/
 ├── server.js              # Express app + rotas
-├── db.js                  # SQLite + schema
+├── db.js                  # Cliente libSQL (Turso) + schema
 ├── middleware/
-│   └── auth.js            # JWT + bcrypt
+│   ├── auth.js            # JWT + bcrypt
+│   └── asyncHandler.js    # Wrapper para handlers async
 ├── routes/
 │   ├── auth.js            # signup, login, me
 │   ├── clients.js         # CRUD de clientes
