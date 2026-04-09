@@ -64,8 +64,14 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
-app.listen(PORT, HOST, () => {
-  const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
-  console.log(`PetCare Pro rodando em http://${displayHost}:${PORT}`);
-  console.log(`Abra http://${displayHost}:${PORT}/login para acessar`);
-});
+// Em ambientes serverless (Vercel) não chamamos listen — o runtime
+// invoca o app exportado como handler. Localmente, sobe o servidor normalmente.
+if (!process.env.VERCEL) {
+  app.listen(PORT, HOST, () => {
+    const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
+    console.log(`PetCare Pro rodando em http://${displayHost}:${PORT}`);
+    console.log(`Abra http://${displayHost}:${PORT}/login para acessar`);
+  });
+}
+
+module.exports = app;

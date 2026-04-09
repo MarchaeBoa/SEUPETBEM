@@ -6,13 +6,24 @@ const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
 
-const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, 'data', 'petcare.db');
+// Em serverless (Vercel) o sistema de arquivos é somente leitura, exceto /tmp.
+// Usamos /tmp como fallback para que a aplicação suba sem crashar. ATENÇÃO:
+// /tmp é efêmero entre invocações — para produção, use um banco gerenciado.
+const DEFAULT_DB_PATH = process.env.VERCEL
+  ? '/tmp/petcare.db'
+  : path.join(__dirname, 'data', 'petcare.db');
+
+const DB_PATH = process.env.DATABASE_PATH || DEFAULT_DB_PATH;
 
 // Garante que a pasta do banco existe
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
+// WAL não é suportado em /tmp em todos os ambientes serverless; mantemos
+// o modo padrão (DELETE) quando rodando no Vercel.
+if (!process.env.VERCEL) {
+  db.pragma('journal_mode = WAL');
+}
 db.pragma('foreign_keys = ON');
 
 db.exec(`
