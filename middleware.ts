@@ -10,12 +10,6 @@ import type { Database } from "@/types/database";
  */
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient<Database>({ req, res });
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
   const { pathname } = req.nextUrl;
 
   // Rotas protegidas do dashboard
@@ -27,6 +21,28 @@ export async function middleware(req: NextRequest) {
     "/configuracoes",
   ];
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
+
+  // Sem as credenciais do Supabase configuradas, `createMiddlewareClient`
+  // lança e derruba todas as requisições com 500 — inclusive a home pública.
+  // Nesse caso tratamos como "sem sessão": páginas públicas renderizam
+  // normalmente e rotas protegidas são redirecionadas para o login.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (isProtected) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(url);
+    }
+    return res;
+  }
+
+  const supabase = createMiddlewareClient<Database>({ req, res });
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   if (isProtected && !session) {
     const url = req.nextUrl.clone();
