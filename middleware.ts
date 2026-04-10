@@ -1,0 +1,52 @@
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import type { Database } from "@/types/database";
+
+/**
+ * Middleware que refresca a sessão do Supabase em toda requisição
+ * e protege as rotas do grupo (dashboard). Usuário não logado que
+ * tentar acessar uma rota protegida é redirecionado para /login.
+ */
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient<Database>({ req, res });
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const { pathname } = req.nextUrl;
+
+  // Rotas protegidas do dashboard
+  const protectedPaths = [
+    "/dashboard",
+    "/clientes",
+    "/pets",
+    "/agendamentos",
+    "/configuracoes",
+  ];
+  const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
+
+  if (isProtected && !session) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("redirectTo", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  return res;
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Executa em todas as rotas, exceto:
+     * - _next/static (assets)
+     * - _next/image (otimização de imagens)
+     * - favicon.ico
+     * - arquivos em /public
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
