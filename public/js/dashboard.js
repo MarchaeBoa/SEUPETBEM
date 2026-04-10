@@ -19,6 +19,9 @@
     clients: [],
     pets: [],
     appointments: [],
+    finances: [],
+    financeFilter: 'all',
+    aiLoading: false,
   };
 
   async function api(path, options = {}) {
@@ -70,6 +73,17 @@
     });
   }
 
+  function formatDate(iso) {
+    if (!iso) return '–';
+    const d = new Date(iso.includes('T') ? iso : iso + 'T00:00:00');
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  }
+
   function escapeHtml(str) {
     if (str == null) return '';
     return String(str).replace(/[&<>"']/g, (c) => ({
@@ -88,6 +102,8 @@
       if (view === 'clients') loadClients();
       if (view === 'pets') loadPets();
       if (view === 'appointments') loadAppointments();
+      if (view === 'finances') loadFinances();
+      if (view === 'ai') loadAiHistory();
       if (view === 'leads') loadLeads();
     });
   });
@@ -492,6 +508,328 @@
 
   const exportBtn = $('#leads-export-btn');
   if (exportBtn) exportBtn.addEventListener('click', exportLeadsCsv);
+
+  // ───────── Finanças ─────────
+  async function loadFinances() {
+    try {
+      const [listData, statsData] = await Promise.all([
+        api('/api/finances'),
+        api('/api/finances/stats'),
+      ]);
+
+      state.finances = listData.finances || [];
+
+      // Stats
+      $('#stat-finance-income').textContent = formatCurrency(statsData.stats.month_income);
+      $('#stat-finance-expense').textContent = formatCurrency(statsData.stats.month_expense);
+      $('#stat-finance-balance').textContent = formatCurrency(statsData.stats.month_balance);
+      $('#stat-finance-overdue').textContent = statsData.stats.overdue_count;
+
+      // Destaque vermelho se houver contas vencidas.
+      const overdueCard = $('#stat-finance-overdue-card');
+      overdueCard.classList.toggle('danger', statsData.stats.overdue_count > 0);
+
+      // Próximos vencimentos
+      const upcomingWrap = $('#finance-upcoming');
+      const upcomingCard = $('#finance-upcoming-card');
+      const upcoming = statsData.upcoming || [];
+      if (!upcoming.length) {
+        upcomingCard.classList.add('hidden');
+      } else {
+        upcomingCard.classList.remove('hidden');
+        upcomingWrap.innerHTML = upcoming
+          .map(
+            (u) => `
+            <div class="list-item">
+              <div class="list-item-main">
+                <strong>${escapeHtml(u.description)}</strong>
+                <span>${u.type === 'receita' ? 'A receber' : 'A pagar'} · ${formatCurrency(u.amount)}</span>
+              </div>
+              <div class="list-item-time">${formatDate(u.due_date)}</div>
+            </div>`
+          )
+          .join('');
+      }
+
+      renderFinancesTable();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  function renderFinancesTable() {
+    const tbody = $('#finances-tbody');
+    const filter = state.financeFilter;
+
+    let items = state.finances;
+    if (filter === 'receita') items = items.filter((f) => f.type === 'receita');
+    else if (filter === 'despesa') items = items.filter((f) => f.type === 'despesa');
+    else if (filter === 'unpaid') items = items.filter((f) => !f.paid);
+
+    $('#finances-empty').classList.toggle('hidden', items.length > 0);
+
+    const now = new Date();
+    tbody.innerHTML = items
+      .map((f) => {
+        const isOverdue =
+          !f.paid && f.due_date && new Date(f.due_date) < now;
+        const statusLabel = f.paid
+          ? (f.type === 'receita' ? 'recebido' : 'pago')
+          : isOverdue
+            ? 'vencido'
+            : 'em-aberto';
+        const statusText = f.paid
+          ? (f.type === 'receita' ? 'Recebido' : 'Pago')
+          : isOverdue
+            ? 'Vencido'
+            : 'Em aberto';
+        const amountClass = f.type === 'receita' ? 'finance-amount-in' : 'finance-amount-out';
+        const amountPrefix = f.type === 'receita' ? '+ ' : '- ';
+        return `
+          <tr>
+            <td>${formatDate(f.due_date) || '–'}</td>
+            <td><strong>${escapeHtml(f.description)}</strong></td>
+            <td>${escapeHtml(f.category || '–')}</td>
+            <td><span class="badge ${f.type}">${f.type}</span></td>
+            <td class="${amountClass}">${amountPrefix}${formatCurrency(f.amount)}</td>
+            <td><span class="badge ${statusLabel}">${statusText}</span></td>
+            <td>
+              ${!f.paid
+                ? `<button class="btn-icon btn-edit" data-pay-finance="${f.id}" title="Marcar como pago">✓</button>`
+                : ''}
+              <button class="btn-icon" data-delete-finance="${f.id}" title="Excluir">🗑️</button>
+            </td>
+          </tr>`;
+      })
+      .join('');
+
+    $$('[data-pay-finance]', tbody).forEach((btn) =>
+      btn.addEventListener('click', () => markFinancePaid(btn.dataset.payFinance))
+    );
+    $$('[data-delete-finance]', tbody).forEach((btn) =>
+      btn.addEventListener('click', () => deleteFinance(btn.dataset.deleteFinance))
+    );
+  }
+
+  $$('[data-finance-filter]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.financeFilter = btn.dataset.financeFilter;
+      $$('[data-finance-filter]').forEach((b) =>
+        b.classList.toggle('chip-active', b === btn)
+      );
+      renderFinancesTable();
+    });
+  });
+
+  async function markFinancePaid(id) {
+    try {
+      await api(`/api/finances/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ paid: true }),
+      });
+      toast('Lançamento atualizado');
+      loadFinances();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  async function deleteFinance(id) {
+    if (!confirm('Excluir este lançamento financeiro?')) return;
+    try {
+      await api(`/api/finances/${id}`, { method: 'DELETE' });
+      toast('Lançamento removido');
+      loadFinances();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  $('#finance-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const body = {
+      type: form.type.value,
+      category: form.category.value.trim(),
+      description: form.description.value.trim(),
+      amount: Number(form.amount.value),
+      due_date: form.due_date.value || null,
+      paid: form.paid.checked,
+      notes: form.notes.value.trim(),
+    };
+    if (!body.type) {
+      toast('Selecione receita ou despesa', 'error');
+      return;
+    }
+    if (!body.description) {
+      toast('Descrição é obrigatória', 'error');
+      return;
+    }
+    if (!(body.amount > 0)) {
+      toast('Valor deve ser maior que zero', 'error');
+      return;
+    }
+    try {
+      await api('/api/finances', { method: 'POST', body: JSON.stringify(body) });
+      closeModal('finance-modal');
+      toast('Lançamento registrado');
+      loadFinances();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  });
+
+  // ───────── Assistente IA ─────────
+  // Conecta ao endpoint /api/ai/chat (com fallback de regras no backend),
+  // persiste histórico no servidor e renderiza balões de conversa.
+  const aiChatBody = $('#ai-chat-body');
+  const aiChatForm = $('#ai-chat-form');
+  const aiChatInput = $('#ai-chat-input');
+  const aiChatSend = $('#ai-chat-send');
+  const aiInsightsCard = $('#ai-insights-card');
+  const aiInsightsContent = $('#ai-insights-content');
+  const aiInsightsBtn = $('#ai-insights-btn');
+  const aiInsightsClose = $('#ai-insights-close');
+  const aiClearBtn = $('#ai-chat-clear');
+
+  function aiRenderMessage(role, content) {
+    // Remove a tela vazia na primeira mensagem real.
+    const empty = aiChatBody.querySelector('.ai-chat-empty');
+    if (empty) empty.remove();
+
+    const wrap = document.createElement('div');
+    wrap.className = `ai-chat-msg ${role}`;
+    wrap.innerHTML = `
+      <div class="ai-chat-avatar-sm">${role === 'user' ? '🧑' : '🤖'}</div>
+      <div class="ai-chat-msg-bubble">${aiFormatContent(content)}</div>
+    `;
+    aiChatBody.appendChild(wrap);
+    aiChatBody.scrollTop = aiChatBody.scrollHeight;
+    return wrap;
+  }
+
+  function aiFormatContent(content) {
+    // Escapa HTML e depois aplica formatação simples (negrito com **texto**).
+    const escaped = escapeHtml(content);
+    return escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  }
+
+  function aiShowTyping() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ai-chat-msg assistant';
+    wrap.dataset.typing = '1';
+    wrap.innerHTML = `
+      <div class="ai-chat-avatar-sm">🤖</div>
+      <div class="ai-chat-msg-bubble">
+        <div class="ai-chat-typing"><span></span><span></span><span></span></div>
+      </div>
+    `;
+    aiChatBody.appendChild(wrap);
+    aiChatBody.scrollTop = aiChatBody.scrollHeight;
+    return wrap;
+  }
+
+  async function loadAiHistory() {
+    try {
+      const { messages } = await api('/api/ai/history');
+      if (!messages || !messages.length) return;
+      // Limpa e renderiza tudo do zero
+      aiChatBody.innerHTML = '';
+      messages.forEach((m) => aiRenderMessage(m.role, m.content));
+    } catch (err) {
+      // Erro silencioso — se não der pra carregar, só mantém a tela vazia.
+      console.error('Falha ao carregar histórico do assistente', err);
+    }
+  }
+
+  async function aiSendMessage(message) {
+    if (!message || state.aiLoading) return;
+    state.aiLoading = true;
+    aiChatSend.disabled = true;
+    aiChatInput.disabled = true;
+    $('#ai-chat-status').textContent = 'Pensando...';
+
+    aiRenderMessage('user', message);
+    const typing = aiShowTyping();
+
+    try {
+      const { answer } = await api('/api/ai/chat', {
+        method: 'POST',
+        body: JSON.stringify({ message }),
+      });
+      typing.remove();
+      aiRenderMessage('assistant', answer || 'Desculpe, não consegui processar agora.');
+    } catch (err) {
+      typing.remove();
+      aiRenderMessage(
+        'assistant',
+        'Ops, tive um problema para responder agora. Tente novamente em instantes.'
+      );
+      toast(err.message, 'error');
+    } finally {
+      state.aiLoading = false;
+      aiChatSend.disabled = false;
+      aiChatInput.disabled = false;
+      $('#ai-chat-status').textContent = 'Pronto para ajudar';
+      aiChatInput.focus();
+    }
+  }
+
+  aiChatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const val = aiChatInput.value.trim();
+    if (!val) return;
+    aiChatInput.value = '';
+    aiSendMessage(val);
+  });
+
+  // Botões de sugestão na tela vazia.
+  aiChatBody.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-ai-suggest]');
+    if (!btn) return;
+    aiSendMessage(btn.dataset.aiSuggest);
+  });
+
+  aiClearBtn.addEventListener('click', async () => {
+    if (!confirm('Limpar todo o histórico de conversa com o assistente?')) return;
+    try {
+      await api('/api/ai/history', { method: 'DELETE' });
+      aiChatBody.innerHTML = `
+        <div class="ai-chat-empty">
+          <p>Histórico limpo. Como posso te ajudar?</p>
+          <div class="ai-chat-suggestions">
+            <button type="button" class="chip" data-ai-suggest="Como cadastro um novo cliente?">Como cadastro um novo cliente?</button>
+            <button type="button" class="chip" data-ai-suggest="Quantos clientes eu tenho?">Quantos clientes eu tenho?</button>
+            <button type="button" class="chip" data-ai-suggest="Qual o meu saldo do mês?">Qual o meu saldo do mês?</button>
+          </div>
+        </div>
+      `;
+      toast('Histórico limpo');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  });
+
+  aiInsightsBtn.addEventListener('click', async () => {
+    aiInsightsBtn.disabled = true;
+    const originalLabel = aiInsightsBtn.textContent;
+    aiInsightsBtn.textContent = '✨ Analisando...';
+    try {
+      const { insights } = await api('/api/ai/insights');
+      aiInsightsContent.innerHTML = aiFormatContent(insights).replace(/\n/g, '<br>');
+      aiInsightsCard.classList.remove('hidden');
+      aiInsightsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      aiInsightsBtn.disabled = false;
+      aiInsightsBtn.textContent = originalLabel;
+    }
+  });
+
+  aiInsightsClose.addEventListener('click', () => {
+    aiInsightsCard.classList.add('hidden');
+  });
 
   // ───────── Init ─────────
   loadUser();
