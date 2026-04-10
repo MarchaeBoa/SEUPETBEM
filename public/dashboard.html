@@ -25,6 +25,12 @@
       <button class="nav-item" data-view="appointments">
         <span class="nav-icon">📅</span> Agendamentos
       </button>
+      <button class="nav-item" data-view="finances">
+        <span class="nav-icon">💰</span> Finanças
+      </button>
+      <button class="nav-item" data-view="ai">
+        <span class="nav-icon">🤖</span> Assistente IA
+      </button>
       <button class="nav-item" data-view="leads">
         <span class="nav-icon">📬</span> Lista de espera
       </button>
@@ -123,6 +129,118 @@
           <tbody id="pets-tbody"></tbody>
         </table>
         <div id="pets-empty" class="empty hidden">Nenhum pet cadastrado ainda.</div>
+      </div>
+    </section>
+
+    <!-- FINANCES -->
+    <section class="view" id="view-finances">
+      <header class="view-header">
+        <div>
+          <h1>Finanças</h1>
+          <p class="view-sub">Registre suas contas a pagar e a receber e acompanhe o saldo do mês</p>
+        </div>
+        <button class="btn-primary" data-open-modal="finance-modal">+ Novo lançamento</button>
+      </header>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Receitas do mês</div>
+          <div class="stat-value" id="stat-finance-income">R$ 0,00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Despesas do mês</div>
+          <div class="stat-value" id="stat-finance-expense">R$ 0,00</div>
+        </div>
+        <div class="stat-card highlight">
+          <div class="stat-label">Saldo do mês</div>
+          <div class="stat-value" id="stat-finance-balance">R$ 0,00</div>
+        </div>
+        <div class="stat-card" id="stat-finance-overdue-card">
+          <div class="stat-label">Contas vencidas</div>
+          <div class="stat-value" id="stat-finance-overdue">0</div>
+        </div>
+      </div>
+
+      <div class="card" id="finance-upcoming-card" style="margin-bottom: 24px;">
+        <h2>Próximos vencimentos</h2>
+        <div id="finance-upcoming" class="list"></div>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap;">
+          <h2 style="margin: 0;">Lançamentos recentes</h2>
+          <div class="finance-filters">
+            <button type="button" class="chip chip-active" data-finance-filter="all">Todos</button>
+            <button type="button" class="chip" data-finance-filter="receita">Receitas</button>
+            <button type="button" class="chip" data-finance-filter="despesa">Despesas</button>
+            <button type="button" class="chip" data-finance-filter="unpaid">Em aberto</button>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Vencimento</th>
+              <th>Descrição</th>
+              <th>Categoria</th>
+              <th>Tipo</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="finances-tbody"></tbody>
+        </table>
+        <div id="finances-empty" class="empty hidden">Nenhum lançamento financeiro ainda. Registre sua primeira conta!</div>
+      </div>
+    </section>
+
+    <!-- AI ASSISTANT -->
+    <section class="view" id="view-ai">
+      <header class="view-header">
+        <div>
+          <h1>Assistente IA 🤖</h1>
+          <p class="view-sub">Tire dúvidas sobre o sistema, peça dicas sobre o negócio e gere insights automáticos</p>
+        </div>
+        <button class="btn-secondary" id="ai-insights-btn" type="button">✨ Gerar insights</button>
+      </header>
+
+      <div class="card ai-insights-card hidden" id="ai-insights-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h2 style="margin: 0;">Insights do seu negócio</h2>
+          <button type="button" class="btn-icon" id="ai-insights-close" title="Fechar">×</button>
+        </div>
+        <div id="ai-insights-content" class="ai-insights-content"></div>
+      </div>
+
+      <div class="card ai-chat-card">
+        <div class="ai-chat-header">
+          <div class="ai-chat-avatar">🤖</div>
+          <div>
+            <strong>Assistente PetCare Pro</strong>
+            <span id="ai-chat-status">Pronto para ajudar</span>
+          </div>
+          <button type="button" class="btn-icon ai-chat-clear" id="ai-chat-clear" title="Limpar conversa">🗑️</button>
+        </div>
+        <div class="ai-chat-body" id="ai-chat-body" aria-live="polite">
+          <div class="ai-chat-empty">
+            <p>👋 Olá! Sou o assistente do PetCare Pro. Posso te ajudar com:</p>
+            <ul>
+              <li>Dúvidas sobre como usar o sistema (clientes, pets, agendamentos, finanças)</li>
+              <li>Perguntas sobre os seus próprios dados ("quantos clientes tenho?", "qual meu saldo?")</li>
+              <li>Dicas e boas práticas para o seu petshop ou clínica</li>
+            </ul>
+            <div class="ai-chat-suggestions">
+              <button type="button" class="chip" data-ai-suggest="Como cadastro um novo cliente?">Como cadastro um novo cliente?</button>
+              <button type="button" class="chip" data-ai-suggest="Quantos clientes eu tenho?">Quantos clientes eu tenho?</button>
+              <button type="button" class="chip" data-ai-suggest="Qual o meu saldo do mês?">Qual o meu saldo do mês?</button>
+              <button type="button" class="chip" data-ai-suggest="Como uso a aba de finanças?">Como uso a aba de finanças?</button>
+            </div>
+          </div>
+        </div>
+        <form class="ai-chat-form" id="ai-chat-form" autocomplete="off">
+          <input type="text" id="ai-chat-input" placeholder="Digite sua pergunta ou peça uma dica..." maxlength="2000" />
+          <button type="submit" class="btn-primary" id="ai-chat-send">Enviar</button>
+        </form>
       </div>
     </section>
 
@@ -306,6 +424,68 @@
           <textarea name="notes" rows="3"></textarea>
         </div>
         <button type="submit" class="btn-primary btn-full">Salvar agendamento</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: FINANCE -->
+  <div class="modal" id="finance-modal">
+    <div class="modal-content">
+      <button class="modal-close" data-close-modal>&times;</button>
+      <h2>Novo lançamento financeiro</h2>
+      <form id="finance-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo *</label>
+            <select name="type" required>
+              <option value="">Selecione</option>
+              <option value="receita">Receita (entrada)</option>
+              <option value="despesa">Despesa (saída)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Categoria</label>
+            <input type="text" name="category" placeholder="Ex: Aluguel, Ração, Serviço" list="finance-categories" />
+            <datalist id="finance-categories">
+              <option value="Aluguel"></option>
+              <option value="Água/Luz"></option>
+              <option value="Internet"></option>
+              <option value="Ração e insumos"></option>
+              <option value="Medicamentos"></option>
+              <option value="Salários"></option>
+              <option value="Marketing"></option>
+              <option value="Impostos"></option>
+              <option value="Serviço prestado"></option>
+              <option value="Produto vendido"></option>
+              <option value="Outros"></option>
+            </datalist>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Descrição *</label>
+          <input type="text" name="description" required placeholder="Ex: Conta de luz de Abril" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Valor (R$) *</label>
+            <input type="number" name="amount" step="0.01" min="0.01" required />
+          </div>
+          <div class="form-group">
+            <label>Vencimento</label>
+            <input type="date" name="due_date" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="paid" />
+            <span>Já foi pago/recebido</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Observações</label>
+          <textarea name="notes" rows="3" placeholder="Opcional"></textarea>
+        </div>
+        <button type="submit" class="btn-primary btn-full">Salvar lançamento</button>
       </form>
     </div>
   </div>

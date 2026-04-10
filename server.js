@@ -15,6 +15,8 @@ const petRoutes = require('./routes/pets');
 const appointmentRoutes = require('./routes/appointments');
 const dashboardRoutes = require('./routes/dashboard');
 const waitlistRoutes = require('./routes/waitlist');
+const financeRoutes = require('./routes/finances');
+const aiRoutes = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,6 +47,8 @@ app.use('/api/pets', petRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/waitlist', waitlistRoutes);
+app.use('/api/finances', financeRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Healthcheck
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'petcare-pro' }));

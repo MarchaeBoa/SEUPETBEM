@@ -110,6 +110,34 @@ const SCHEMA_STATEMENTS = [
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
     FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
   )`,
+  // Lançamentos financeiros (contas a pagar e a receber) do negócio.
+  // Usado na view "Finanças" do dashboard para o operador registrar
+  // despesas fixas/variáveis e receitas além dos serviços agendados.
+  `CREATE TABLE IF NOT EXISTS finances (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER NOT NULL,
+    type TEXT NOT NULL CHECK(type IN ('receita', 'despesa')),
+    category TEXT,
+    description TEXT NOT NULL,
+    amount REAL NOT NULL,
+    due_date TEXT,
+    paid INTEGER NOT NULL DEFAULT 0,
+    notes TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+  )`,
+  // Histórico de mensagens do Assistente IA do dashboard. Mantemos por
+  // usuário/negócio para oferecer continuidade de contexto nas próximas
+  // perguntas sem pagar re-envio completo de todo o histórico.
+  `CREATE TABLE IF NOT EXISTS ai_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+  )`,
   // Waitlist / lista de espera de pré-lançamento. É a captura de lead
   // "honesta" — não promete funcionalidades prontas, apenas reserva a vaga
   // para quando a plataforma abrir para novos negócios.
@@ -135,6 +163,9 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_pets_business ON pets(business_id)`,
   `CREATE INDEX IF NOT EXISTS idx_appointments_business ON appointments(business_id)`,
   `CREATE INDEX IF NOT EXISTS idx_appointments_scheduled ON appointments(scheduled_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_finances_business ON finances(business_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_finances_due ON finances(due_date)`,
+  `CREATE INDEX IF NOT EXISTS idx_ai_messages_user ON ai_messages(user_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_waitlist_created ON waitlist_leads(created_at)`,
 ];
 
