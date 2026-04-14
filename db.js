@@ -70,6 +70,7 @@ const SCHEMA_STATEMENTS = [
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'owner',
+    status TEXT NOT NULL DEFAULT 'pendente' CHECK(status IN ('ativo', 'pendente', 'bloqueado')),
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
   )`,
@@ -138,6 +139,19 @@ const SCHEMA_STATEMENTS = [
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
   )`,
+  // Solicitações de demonstração (ex-signup público). Quem quiser usar o
+  // produto agenda uma demo pela landing; o acesso real ao painel só é
+  // liberado depois que a equipe confirma o plano e muda `users.status`
+  // para `ativo`.
+  `CREATE TABLE IF NOT EXISTS demo_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    negocio TEXT NOT NULL,
+    email TEXT NOT NULL,
+    telefone TEXT NOT NULL,
+    tipo_negocio TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
   // Waitlist / lista de espera de pré-lançamento. É a captura de lead
   // "honesta" — não promete funcionalidades prontas, apenas reserva a vaga
   // para quando a plataforma abrir para novos negócios.
@@ -167,6 +181,24 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_finances_due ON finances(due_date)`,
   `CREATE INDEX IF NOT EXISTS idx_ai_messages_user ON ai_messages(user_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_waitlist_created ON waitlist_leads(created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_demo_requests_created ON demo_requests(created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_demo_requests_email ON demo_requests(email)`,
+];
+
+// Migrações não-destrutivas: para bancos criados antes da coluna `status`
+// existir em `users`, adicionamos a coluna via ALTER TABLE. `ADD COLUMN` do
+// SQLite não é idempotente, então a função engole o erro "duplicate column".
+//
+// O default 'ativo' nesta migração é intencional: usuários pré-existentes
+// (criados antes do novo fluxo comercial) já tinham acesso ao painel e não
+// podem ser "travados" de surpresa. Tabelas novas usam o default 'pendente'
+// vindo de CREATE TABLE acima — e, nesse caso, qualquer admin que precise
+// criar um usuário deve setar o status explicitamente.
+const MIGRATION_STATEMENTS = [
+  {
+    description: 'users.status',
+    sql: `ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'ativo'`,
+  },
 ];
 
 // Memoiza a inicialização: no ambiente serverless do Vercel, cada cold
@@ -178,6 +210,19 @@ function init() {
     initPromise = (async () => {
       for (const stmt of SCHEMA_STATEMENTS) {
         await db.execute(stmt);
+      }
+      // Aplica migrações idempotentes (ADD COLUMN) tolerando erro de coluna
+      // já existente — necessário para bancos criados antes do campo
+      // `users.status` existir.
+      for (const migration of MIGRATION_STATEMENTS) {
+        try {
+          await db.execute(migration.sql);
+        } catch (err) {
+          const msg = String(err && err.message || '').toLowerCase();
+          if (!msg.includes('duplicate column') && !msg.includes('already exists')) {
+            throw err;
+          }
+        }
       }
     })().catch((err) => {
       // Em caso de falha, limpa o cache para permitir nova tentativa

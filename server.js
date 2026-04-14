@@ -17,6 +17,7 @@ const dashboardRoutes = require('./routes/dashboard');
 const waitlistRoutes = require('./routes/waitlist');
 const financeRoutes = require('./routes/finances');
 const aiRoutes = require('./routes/ai');
+const demoRequestRoutes = require('./routes/demoRequests');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -49,6 +50,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/finances', financeRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/demo-requests', demoRequestRoutes);
 
 // Healthcheck
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'petcare-pro' }));
@@ -64,7 +66,10 @@ const sendPage = (file) => (_req, res) =>
 
 app.get(['/dashboard', '/app', '/painel'], sendPage('dashboard.html'));
 app.get('/login', sendPage('login.html'));
-app.get(['/signup', '/cadastro'], sendPage('signup.html'));
+// /signup agora é "Agendar demonstração" — mantemos /cadastro e /demo
+// como aliases para compatibilidade com campanhas antigas.
+app.get(['/signup', '/cadastro', '/demo', '/agendar-demonstracao'], sendPage('signup.html'));
+app.get('/acesso-restrito', sendPage('acesso-restrito.html'));
 
 // Páginas legais (Termos, Privacidade, LGPD)
 app.get('/termos', sendPage('termos.html'));

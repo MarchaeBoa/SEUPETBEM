@@ -294,6 +294,12 @@ nav {
   flex-wrap: wrap;
   margin-bottom: 22px;
 }
+.hero-cta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0 26px;
+}
 .btn-primary {
   background: var(--accent);
   color: #fff;
