@@ -6,9 +6,14 @@
  *   2. Valida o e-mail localmente (rápido, só para evitar POST desnecessário);
  *   3. Envia para POST /api/waitlist junto com UTMs extraídos da URL;
  *   4. Dispara o evento `lead_submit` no dataLayer (consumido pelo GTM);
- *   5. Redireciona para /obrigado?email=... para que a página de conversão
- *      possa disparar o evento `sign_up` / `conversion`;
- *   6. Em erro, exibe mensagem inline sem recarregar a página.
+ *   5. Exibe feedback inline (sucesso, duplicado ou erro) — SEM redirecionar.
+ *      A decisão de permanecer na página evita perder contexto de leitura
+ *      e deixa o visitante livre para continuar explorando a landing.
+ *
+ * Mensagens padronizadas (exatamente como o time de produto pediu):
+ *   - Criado:    "✓ E-mail cadastrado! Você será o primeiro a saber..."
+ *   - Duplicado: "Este e-mail já está na lista."
+ *   - Erro:      "Algo deu errado. Tente novamente."
  *
  * Persistência dos UTMs: lemos da URL atual OU do sessionStorage (preenchido
  * no primeiro carregamento). Isto preserva a atribuição mesmo quando o
@@ -20,6 +25,14 @@
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
   var STORAGE_KEY = 'seupetbem_utms';
+
+  // Copy centralizado para que QA e produto possam revisar num só lugar.
+  var MESSAGES = {
+    invalid: 'Informe um e-mail válido para continuar.',
+    success: '✓ E-mail cadastrado! Você será o primeiro a saber quando abrirmos novas vagas.',
+    duplicate: 'Este e-mail já está na lista.',
+    generic: 'Algo deu errado. Tente novamente.',
+  };
 
   // ─── UTM helpers ───
   function readUtmsFromLocation() {
@@ -86,13 +99,38 @@
 
   function setBusy(form, busy) {
     var btn = form.querySelector('button[type="submit"]');
-    if (!btn) return;
-    btn.disabled = !!busy;
-    if (busy) {
-      btn.dataset.label = btn.textContent;
-      btn.textContent = 'Enviando...';
-    } else if (btn.dataset.label) {
-      btn.textContent = btn.dataset.label;
+    var input = form.querySelector('input[type="email"]');
+    if (btn) {
+      btn.disabled = !!busy;
+      // Guardamos o label original em data-label para restaurar depois.
+      // Isso tolera múltiplas chamadas seguidas sem perder o texto inicial.
+      if (busy) {
+        if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+        btn.textContent = 'Enviando...';
+        btn.setAttribute('aria-busy', 'true');
+      } else {
+        if (btn.dataset.label) btn.textContent = btn.dataset.label;
+        btn.removeAttribute('aria-busy');
+      }
+    }
+    // Bloqueamos o input durante a requisição para evitar edição no meio
+    // do fly — o usuário ainda pode tentar de novo depois que o estado volta.
+    if (input) input.disabled = !!busy;
+  }
+
+  // Após cadastro com sucesso (status 'created'), limpamos o campo e
+  // desabilitamos o form para deixar claro que a ação terminou. O usuário
+  // ainda pode recarregar ou usar o form da seção CTA se quiser retentar.
+  function lockAfterSuccess(form) {
+    var input = form.querySelector('input[type="email"]');
+    var btn = form.querySelector('button[type="submit"]');
+    if (input) {
+      input.value = '';
+      input.disabled = true;
+    }
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Cadastrado ✓';
     }
   }
 
@@ -105,7 +143,7 @@
 
       var email = (input.value || '').trim().toLowerCase();
       if (!EMAIL_RE.test(email)) {
-        setFeedback(form, 'Informe um e-mail válido para continuar.', 'err');
+        setFeedback(form, MESSAGES.invalid, 'err');
         input.focus();
         return;
       }
@@ -133,38 +171,53 @@
         body: JSON.stringify(payload),
       })
         .then(function (res) {
-          return res.json().then(function (data) {
-            return { ok: res.ok, status: res.status, data: data };
-          });
+          return res.json().then(
+            function (data) {
+              return { ok: res.ok, status: res.status, data: data || {} };
+            },
+            // Resposta sem JSON válido — ainda assim precisamos resolver.
+            function () {
+              return { ok: res.ok, status: res.status, data: {} };
+            }
+          );
         })
         .then(function (result) {
+          // Erro HTTP genérico: mostra mensagem padrão e reabilita o form.
           if (!result.ok) {
-            var msg = (result.data && result.data.error) || 'Não foi possível registrar agora. Tente novamente.';
-            setFeedback(form, msg, 'err');
+            setFeedback(form, MESSAGES.generic, 'err');
             setBusy(form, false);
             track('lead_submit_error', { source: source, status: result.status });
             return;
           }
 
+          // O endpoint é idempotente: retorna 200 com `status: 'updated'`
+          // quando o e-mail já existe. Tratamos isso como "duplicado" na UI
+          // pois é o que o visitante percebe — não é uma falha técnica, só
+          // uma confirmação de que ele já está na lista.
+          var apiStatus = result.data && result.data.status;
+          if (apiStatus === 'updated') {
+            setFeedback(form, MESSAGES.duplicate, 'err');
+            setBusy(form, false);
+            track('lead_submit_duplicate', { source: source });
+            return;
+          }
+
+          // Sucesso (status: 'created'): feedback inline e trava do form
+          // para evitar submissões duplicadas no mesmo page view.
+          setBusy(form, false);
+          lockAfterSuccess(form);
+          setFeedback(form, MESSAGES.success, 'ok');
+
           // Evento primário de conversão. O GTM usa este nome como trigger
           // tanto no GA4 quanto em pixels de mídia paga.
           track('lead_submit', {
             source: source,
-            status: (result.data && result.data.status) || 'created',
+            status: apiStatus || 'created',
           });
-
-          // Redireciona para a página de obrigado, passando `status` para
-          // evitar contar a mesma conversão duas vezes caso o usuário
-          // recarregue (a página lê o parâmetro e só dispara uma vez).
-          var qs = new URLSearchParams({
-            status: (result.data && result.data.status) || 'created',
-            source: source,
-          });
-          window.location.href = '/obrigado?' + qs.toString();
         })
         .catch(function (err) {
           console.error('[waitlist] erro de rede:', err);
-          setFeedback(form, 'Erro de rede. Verifique sua conexão e tente novamente.', 'err');
+          setFeedback(form, MESSAGES.generic, 'err');
           setBusy(form, false);
           track('lead_submit_error', { source: source, status: 0 });
         });
