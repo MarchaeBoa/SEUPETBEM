@@ -1142,6 +1142,35 @@ footer {
 .waitlist-form button[type="submit"] {
   flex: 0 0 auto;
 }
+/* Quando o cadastro é concluído, o JS desabilita input+botão: mantemos
+   cursor e opacidade coerentes com o estado final, sem parecer "quebrado". */
+.waitlist-form input[type="email"]:disabled,
+.waitlist-form button[type="submit"]:disabled {
+  cursor: not-allowed;
+  opacity: .72;
+}
+/* Link secundário que acompanha os forms (hero e CTA), para quem prefere
+   agendar uma demo em vez de entrar na lista de espera. */
+.hero-secondary-link,
+.cta-secondary-link {
+  display: inline-block;
+  font-size: 0.93rem;
+  color: var(--text-light);
+  text-decoration: none;
+  border-bottom: 1px dashed currentColor;
+  padding-bottom: 1px;
+  transition: color .15s;
+}
+.hero-secondary-link:hover,
+.cta-secondary-link:hover {
+  color: var(--accent-dark);
+}
+#cta .cta-secondary-link {
+  color: rgba(255, 255, 255, .72);
+}
+#cta .cta-secondary-link:hover {
+  color: #fff;
+}
 .waitlist-feedback {
   min-height: 20px;
   font-size: 0.88rem;

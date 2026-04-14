@@ -92,12 +92,34 @@
       <h1>A gestão feita para <em>clínicas veterinárias e pet shops</em></h1>
       <p class="hero-lead">Conheça a PetCare Pro em uma demonstração guiada: apresentamos a plataforma, entendemos as necessidades do seu negócio e ajudamos você a decidir com calma.</p>
 
-      <!-- CTA principal: leva direto para /signup (formulário "Agendar
-           demonstração"). A equipe comercial assume a partir daí e libera
-           o acesso ao painel após a confirmação do plano. -->
+      <!-- CTA principal: captura de e-mail para a lista de espera.
+           O handler em /js/waitlist.js valida o e-mail, chama
+           POST /api/waitlist e exibe feedback inline (sucesso/erro/duplicado).
+           O link "Agendar demonstração" fica como caminho secundário para
+           quem prefere contato direto com a equipe comercial. -->
+      <form class="waitlist-form" id="waitlist-form-hero" novalidate>
+        <label class="sr-only" for="waitlist-email-hero">Seu melhor e-mail</label>
+        <input
+          type="email"
+          id="waitlist-email-hero"
+          name="email"
+          required
+          autocomplete="email"
+          placeholder="Seu melhor e-mail"
+        />
+        <button type="submit" class="btn-primary" id="hero-cta">
+          Entrar na lista de espera
+        </button>
+      </form>
+      <p
+        class="waitlist-feedback"
+        id="waitlist-form-hero-feedback"
+        role="status"
+        aria-live="polite"
+      ></p>
       <div class="hero-cta">
-        <a href="/signup" class="btn-primary" id="hero-cta">
-          Agendar demonstração
+        <a href="/signup" class="hero-secondary-link">
+          Prefere agendar uma demonstração? Fale com o nosso time →
         </a>
       </div>
 
@@ -421,9 +443,33 @@
     <h2 class="section-title light">Veja a PetCare Pro funcionando no seu negócio</h2>
     <p class="section-sub light">Agende uma demonstração guiada com a nossa equipe. Mostramos a plataforma na prática e ajudamos você a escolher o plano certo.</p>
 
+    <!-- Duplicamos o formulário de lista de espera aqui (seção CTA) para
+         capturar visitantes que só engajam depois de rolar a landing inteira.
+         Mesmo script (/js/waitlist.js) trata os dois forms — o `source` é
+         derivado do id e vai para o payload e o dataLayer. -->
+    <form class="waitlist-form waitlist-form-cta" id="waitlist-form-cta" novalidate>
+      <label class="sr-only" for="waitlist-email-cta">Seu melhor e-mail</label>
+      <input
+        type="email"
+        id="waitlist-email-cta"
+        name="email"
+        required
+        autocomplete="email"
+        placeholder="Seu melhor e-mail"
+      />
+      <button type="submit" class="btn-primary cta-white" id="cta-agendar">
+        Entrar na lista de espera
+      </button>
+    </form>
+    <p
+      class="waitlist-feedback"
+      id="waitlist-form-cta-feedback"
+      role="status"
+      aria-live="polite"
+    ></p>
     <div class="cta-actions">
-      <a href="/signup" class="btn-primary cta-white" id="cta-agendar">
-        Agendar demonstração
+      <a href="/signup" class="cta-secondary-link">
+        Ou agende uma demonstração com o nosso time →
       </a>
     </div>
   </div>
@@ -479,6 +525,7 @@
   </div>
 </footer>
 
+<script src="/js/waitlist.js" defer></script>
 <script src="/js/chat-widget.js" defer></script>
 </body>
 </html>
