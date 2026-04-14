@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Criar conta - PetCare Pro</title>
+  <title>Agendar demonstração - PetCare Pro</title>
+  <meta name="description" content="Agende uma demonstração guiada da PetCare Pro. Nossa equipe entra em contato em até 1 dia útil." />
   <meta name="robots" content="noindex, nofollow" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/auth.css" />
@@ -12,33 +13,44 @@
 <body>
   <div class="auth-card">
     <a href="/" class="auth-logo"><span>🐾</span> PetCare Pro</a>
-    <h1>Crie sua conta grátis</h1>
-    <p class="subtitle">14 dias de teste. Sem cartão de crédito.</p>
+    <h1>Agendar demonstração</h1>
+    <p class="subtitle">Conte um pouco sobre o seu negócio e nossa equipe entra em contato para agendar uma demo guiada.</p>
 
     <div id="alert" class="alert" role="alert" aria-live="polite"></div>
 
-    <form id="signup-form">
+    <form id="demo-request-form" novalidate>
       <div class="form-group">
-        <label for="business_name">Nome do seu negócio</label>
-        <input type="text" id="business_name" name="business_name" required placeholder="Ex: Clínica Pet Feliz" />
+        <label for="nome">Seu nome</label>
+        <input type="text" id="nome" name="nome" required autocomplete="name" />
       </div>
       <div class="form-group">
-        <label for="name">Seu nome</label>
-        <input type="text" id="name" name="name" required autocomplete="name" />
+        <label for="negocio">Nome do negócio</label>
+        <input type="text" id="negocio" name="negocio" required placeholder="Ex: Clínica Pet Feliz" />
       </div>
       <div class="form-group">
         <label for="email">Email</label>
         <input type="email" id="email" name="email" required autocomplete="email" />
       </div>
       <div class="form-group">
-        <label for="password">Senha (mínimo 6 caracteres)</label>
-        <input type="password" id="password" name="password" required minlength="6" autocomplete="new-password" />
+        <label for="telefone">Telefone</label>
+        <input type="tel" id="telefone" name="telefone" required autocomplete="tel" placeholder="(11) 99999-9999" />
       </div>
-      <button type="submit" class="btn-submit" id="submit-btn">Criar conta</button>
+      <div class="form-group">
+        <label for="tipo_negocio">Tipo de negócio</label>
+        <select id="tipo_negocio" name="tipo_negocio" required>
+          <option value="" disabled selected>Selecione…</option>
+          <option value="clinica_veterinaria">Clínica veterinária</option>
+          <option value="pet_shop">Pet shop</option>
+          <option value="hotel_para_pets">Hotel para pets</option>
+          <option value="banho_e_tosa">Banho e tosa</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-submit" id="submit-btn">Agendar demonstração</button>
     </form>
 
     <p class="auth-footer">
-      Já tem conta? <a href="/login">Fazer login</a>
+      Já tem acesso liberado? <a href="/login">Fazer login</a>
     </p>
   </div>
 

@@ -65,7 +65,8 @@ body {
   margin-bottom: 6px;
   color: var(--text);
 }
-.form-group input {
+.form-group input,
+.form-group select {
   width: 100%;
   padding: 12px 14px;
   border: 1.5px solid var(--border);
@@ -74,8 +75,18 @@ body {
   font-family: inherit;
   transition: border-color .2s;
   background: #fff;
+  color: var(--text);
+  appearance: none;
+  -webkit-appearance: none;
 }
-.form-group input:focus {
+.form-group select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 10 13 14 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+}
+.form-group input:focus,
+.form-group select:focus {
   outline: none;
   border-color: var(--primary);
 }

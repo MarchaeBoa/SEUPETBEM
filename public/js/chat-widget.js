@@ -16,17 +16,17 @@
     root: {
       msg: 'Oi! Sou o assistente virtual da PetCare Pro. Como posso te ajudar hoje?',
       options: [
-        { label: 'Quero testar 14 dias grátis', next: 'trial' },
+        { label: 'Quero agendar uma demonstração', next: 'demo' },
         { label: 'Dúvidas sobre planos e preços', next: 'pricing' },
         { label: 'Migração do meu sistema atual', next: 'migration' },
         { label: 'Já sou cliente e preciso de ajuda', next: 'customer' },
         { label: 'Falar com um atendente humano', next: 'human' }
       ]
     },
-    trial: {
-      msg: 'Ótimo! O teste de 14 dias é gratuito, libera todas as funcionalidades do plano Profissional e não exige cartão de crédito. É só criar sua conta em <a href="/signup">/signup</a> e começar a usar.',
+    demo: {
+      msg: 'Ótimo! A demonstração é guiada pela nossa equipe: mostramos a plataforma na prática, entendemos as necessidades do seu negócio e ajudamos você a escolher o plano certo. É só preencher o formulário em <a href="/signup">/signup</a> que entramos em contato em até 1 dia útil.',
       options: [
-        { label: 'Criar minha conta agora', href: '/signup' },
+        { label: 'Agendar demonstração agora', href: '/signup' },
         { label: 'Tenho outra dúvida', next: 'root' }
       ]
     },
@@ -34,22 +34,14 @@
       msg: 'Temos três planos: Starter (R$ 89/mês), Profissional (R$ 229/mês) e Enterprise (sob consulta). Você pode ver a comparação completa na <a href="#pricing">seção de planos</a>. Quer que eu explique algum?',
       options: [
         { label: 'Diferenças entre Starter e Profissional', next: 'plansCompare' },
-        { label: 'Tem fidelidade ou multa?', next: 'fidelidade' },
         { label: 'Voltar ao menu', next: 'root' }
       ]
     },
     plansCompare: {
       msg: 'O Starter atende até 200 clientes e inclui agenda, prontuário básico e suporte por e-mail. O Profissional tem clientes ilimitados, prontuário completo, financeiro, marketing automatizado, até 5 usuários e suporte prioritário por chat (este aqui!).',
       options: [
-        { label: 'Quero começar no Profissional', href: '/signup' },
+        { label: 'Agendar demonstração do Profissional', href: '/signup' },
         { label: 'Voltar', next: 'pricing' }
-      ]
-    },
-    fidelidade: {
-      msg: 'Nada de fidelidade! O contrato é mensal e você pode cancelar a qualquer momento direto pelo painel, sem multa e sem burocracia.',
-      options: [
-        { label: 'Começar teste grátis', href: '/signup' },
-        { label: 'Voltar ao menu', next: 'root' }
       ]
     },
     migration: {

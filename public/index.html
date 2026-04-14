@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PetCare Pro | Gestão para clínicas veterinárias e pet shops</title>
-  <meta name="description" content="Plataforma de gestão para clínicas veterinárias, pet shops e hotéis para pets. Em fase de pré-lançamento — entre na lista de espera e seja um dos primeiros a testar." />
+  <meta name="description" content="Plataforma de gestão para clínicas veterinárias, pet shops e hotéis para pets. Agende uma demonstração guiada com a nossa equipe." />
   <meta name="keywords" content="software veterinário, sistema para clínica veterinária, gestão pet shop, agenda online veterinária, prontuário eletrônico veterinário" />
   <meta name="robots" content="index, follow" />
   <meta property="og:title" content="PetCare Pro | Gestão completa para o mercado pet" />
-  <meta property="og:description" content="Plataforma de gestão para clínicas veterinárias e pet shops. Entre na lista de espera do pré-lançamento." />
+  <meta property="og:description" content="Plataforma de gestão para clínicas veterinárias e pet shops. Agende uma demonstração guiada com a nossa equipe." />
   <meta property="og:type" content="website" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/landing.css" />
@@ -44,7 +44,7 @@
   </ul>
   <div class="nav-actions">
     <a href="/login" class="nav-login">Entrar</a>
-    <a href="#cta" class="nav-cta">Lista de espera</a>
+    <a href="/signup" class="nav-cta">Agendar demonstração</a>
   </div>
 </nav>
 
@@ -87,34 +87,24 @@
     <div class="hero-content">
       <div class="hero-badge">
         <span class="dot"></span>
-        Pré-lançamento · vagas limitadas
+        Demonstração guiada com nossa equipe
       </div>
       <h1>A gestão feita para <em>clínicas veterinárias e pet shops</em></h1>
-      <p class="hero-lead">Estamos em fase de pré-lançamento com as primeiras operações parceiras. Deixe seu e-mail para reservar sua vaga — avisamos assim que abrirmos novas inscrições, sem spam e sem compromisso.</p>
+      <p class="hero-lead">Conheça a PetCare Pro em uma demonstração guiada: apresentamos a plataforma, entendemos as necessidades do seu negócio e ajudamos você a decidir com calma.</p>
 
-      <!-- Formulário de captação da lista de espera. O submit é interceptado
-           pelo /js/waitlist.js, que chama POST /api/waitlist e redireciona
-           para /obrigado em caso de sucesso. -->
-      <form id="waitlist-form" class="waitlist-form" novalidate>
-        <label class="sr-only" for="waitlist-email">Seu melhor e-mail</label>
-        <input
-          type="email"
-          id="waitlist-email"
-          name="email"
-          placeholder="seu@email.com.br"
-          autocomplete="email"
-          required
-        />
-        <button type="submit" class="btn-primary" id="waitlist-submit">
-          Entrar na lista
-        </button>
-      </form>
-      <p id="waitlist-feedback" class="waitlist-feedback" role="status" aria-live="polite"></p>
+      <!-- CTA principal: leva direto para /signup (formulário "Agendar
+           demonstração"). A equipe comercial assume a partir daí e libera
+           o acesso ao painel após a confirmação do plano. -->
+      <div class="hero-cta">
+        <a href="/signup" class="btn-primary" id="hero-cta">
+          Agendar demonstração
+        </a>
+      </div>
 
       <ul class="hero-checks">
         <li>
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Sem spam
+          Atendimento personalizado
         </li>
         <li>
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -122,7 +112,7 @@
         </li>
         <li>
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Cancele a qualquer momento
+          Migração assistida dos seus dados
         </li>
       </ul>
     </div>
@@ -293,8 +283,8 @@
       <span>Senhas com hash, HTTPS e conformidade com a LGPD</span>
     </div>
     <div class="result-card">
-      <strong>Sem fidelidade</strong>
-      <span>Avaliação gratuita e cancelamento a qualquer momento</span>
+      <strong>Suporte próximo</strong>
+      <span>Equipe dedicada do primeiro contato à implantação</span>
     </div>
   </div>
 </section>
@@ -303,14 +293,14 @@
 <section id="how">
   <div class="center">
     <div class="section-label">Como funciona</div>
-    <h2 class="section-title">Implantação rápida, sem dor de cabeça</h2>
-    <p class="section-sub">Sem instalação. Sem contratos longos. Do cadastro ao primeiro atendimento em menos de 24 horas.</p>
+    <h2 class="section-title">Implantação guiada, sem dor de cabeça</h2>
+    <p class="section-sub">Do primeiro contato à operação, nossa equipe acompanha cada etapa. Implantação assistida e treinamento ao vivo.</p>
   </div>
   <div class="steps">
     <div class="step">
       <div class="step-num">01</div>
-      <h3>Entre na lista</h3>
-      <p>Deixe seu e-mail e conte um pouco sobre seu negócio. Retornamos em ordem de chegada assim que abrirmos o próximo lote de vagas.</p>
+      <h3>Agende sua demonstração</h3>
+      <p>Preencha o formulário contando sobre seu negócio. Nossa equipe entra em contato em até 1 dia útil para agendar uma demo guiada.</p>
     </div>
     <div class="step">
       <div class="step-num">02</div>
@@ -334,9 +324,9 @@
 <!-- PRICING -->
 <section id="pricing">
   <div class="center">
-    <div class="section-label">Planos previstos</div>
+    <div class="section-label">Planos</div>
     <h2 class="section-title">Um plano certo para cada fase do seu negócio</h2>
-    <p class="section-sub">Esta é a estrutura de planos que vamos disponibilizar no lançamento. Valores e limites podem ser ajustados conforme o feedback dos primeiros clientes.</p>
+    <p class="section-sub">Escolha o plano que combina com o tamanho da sua operação. Agende uma demonstração para ver a plataforma em funcionamento e tirar suas dúvidas com o nosso time.</p>
   </div>
   <div class="pricing-grid">
 
@@ -352,7 +342,7 @@
         <li>Relatórios essenciais</li>
         <li>Suporte por e-mail</li>
       </ul>
-      <a href="#cta" class="btn-plan">Entrar na lista</a>
+      <a href="/signup" class="btn-plan">Agendar demonstração</a>
     </div>
 
     <div class="pricing-card featured">
@@ -369,7 +359,7 @@
         <li>Relatórios avançados e BI</li>
         <li>Suporte prioritário por chat</li>
       </ul>
-      <a href="#cta" class="btn-plan">Entrar na lista</a>
+      <a href="/signup" class="btn-plan">Agendar demonstração</a>
     </div>
 
     <div class="pricing-card">
@@ -398,12 +388,12 @@
   </div>
   <div class="faq-list">
     <details>
-      <summary>Em que fase o produto está?</summary>
-      <p>Estamos em pré-lançamento: já operamos com um grupo restrito de clínicas parceiras e abriremos novas vagas em lotes pequenos para garantir suporte dedicado a cada implantação. Quem entra na lista de espera é avisado em primeira mão, por ordem de chegada.</p>
+      <summary>Como começo a usar a PetCare Pro?</summary>
+      <p>O acesso ao painel é liberado após a contratação de um plano. Você agenda uma demonstração guiada com nossa equipe, conhece a plataforma, escolhe o plano ideal e, ao confirmar a contratação, seu acesso é ativado.</p>
     </details>
     <details>
-      <summary>Quanto custa entrar na lista?</summary>
-      <p>Nada. A lista de espera é gratuita e sem compromisso. Só pedimos seu e-mail para avisar quando o próximo lote abrir — você decide se quer participar.</p>
+      <summary>Como funciona a demonstração?</summary>
+      <p>É uma reunião curta, por videochamada, em que mostramos a plataforma na prática usando exemplos do seu segmento. Você pode tirar dúvidas, ver os fluxos do dia a dia e decidir com calma.</p>
     </details>
     <details>
       <summary>Preciso instalar alguma coisa?</summary>
@@ -424,28 +414,18 @@
   </div>
 </section>
 
-<!-- CTA · lista de espera -->
+<!-- CTA · agendar demonstração -->
 <section id="cta">
   <div class="cta-inner">
-    <div class="section-label dark-label">Pré-lançamento</div>
-    <h2 class="section-title light">Seja um dos primeiros a usar a PetCare Pro</h2>
-    <p class="section-sub light">Estamos abrindo vagas em lotes pequenos para garantir suporte dedicado em cada implantação. Deixe seu e-mail e avisamos assim que o próximo lote abrir.</p>
+    <div class="section-label dark-label">Demonstração</div>
+    <h2 class="section-title light">Veja a PetCare Pro funcionando no seu negócio</h2>
+    <p class="section-sub light">Agende uma demonstração guiada com a nossa equipe. Mostramos a plataforma na prática e ajudamos você a escolher o plano certo.</p>
 
-    <form id="waitlist-form-cta" class="waitlist-form waitlist-form-cta" novalidate>
-      <label class="sr-only" for="waitlist-email-cta">Seu melhor e-mail</label>
-      <input
-        type="email"
-        id="waitlist-email-cta"
-        name="email"
-        placeholder="seu@email.com.br"
-        autocomplete="email"
-        required
-      />
-      <button type="submit" class="btn-primary cta-white" id="waitlist-submit-cta">
-        Entrar na lista
-      </button>
-    </form>
-    <p id="waitlist-feedback-cta" class="waitlist-feedback" role="status" aria-live="polite"></p>
+    <div class="cta-actions">
+      <a href="/signup" class="btn-primary cta-white" id="cta-agendar">
+        Agendar demonstração
+      </a>
+    </div>
   </div>
 </section>
 
@@ -499,7 +479,6 @@
   </div>
 </footer>
 
-<script src="/js/waitlist.js" defer></script>
 <script src="/js/chat-widget.js" defer></script>
 </body>
 </html>

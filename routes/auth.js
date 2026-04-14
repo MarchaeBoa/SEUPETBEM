@@ -6,74 +6,32 @@ const asyncHandler = require('../middleware/asyncHandler');
 
 const router = express.Router();
 
-// libsql retorna `lastInsertRowid` como BigInt. Convertemos para Number
-// antes de usar em respostas JSON e em outras queries.
-const toId = (v) => (typeof v === 'bigint' ? Number(v) : v);
-
 /**
  * POST /api/auth/signup
- * Cria um novo business e seu usuário owner.
+ *
+ * Historicamente esta rota criava um business + usuário owner diretamente
+ * a partir do formulário público. A partir do novo fluxo comercial, o
+ * acesso ao painel só é liberado pela equipe depois da confirmação do
+ * plano — portanto esta rota foi desativada e responde 410 Gone com uma
+ * orientação para o usuário agendar uma demonstração.
  */
-router.post(
-  '/signup',
-  asyncHandler(async (req, res) => {
-    const { name, email, password, business_name } = req.body || {};
-
-    if (!name || !email || !password || !business_name) {
-      return res.status(400).json({ error: 'Preencha nome, email, senha e nome do negócio' });
-    }
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres' });
-    }
-
-    const existing = await db.execute({
-      sql: 'SELECT id FROM users WHERE email = ?',
-      args: [email.toLowerCase()],
-    });
-    if (existing.rows.length > 0) {
-      return res.status(409).json({ error: 'Email já cadastrado' });
-    }
-
-    const hash = bcrypt.hashSync(password, 10);
-
-    // Transação garante que business + user são criados atomicamente.
-    const tx = await db.transaction('write');
-    let businessId;
-    let userId;
-    try {
-      const bizResult = await tx.execute({
-        sql: 'INSERT INTO businesses (name, plan) VALUES (?, ?)',
-        args: [business_name, 'starter'],
-      });
-      businessId = toId(bizResult.lastInsertRowid);
-
-      const userResult = await tx.execute({
-        sql: 'INSERT INTO users (business_id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
-        args: [businessId, name, email.toLowerCase(), hash, 'owner'],
-      });
-      userId = toId(userResult.lastInsertRowid);
-
-      await tx.commit();
-    } catch (err) {
-      await tx.rollback();
-      throw err;
-    }
-
-    const user = {
-      id: userId,
-      business_id: businessId,
-      name,
-      email: email.toLowerCase(),
-      role: 'owner',
-    };
-    const token = signToken(user);
-
-    res.status(201).json({ token, user });
-  })
-);
+router.post('/signup', (_req, res) => {
+  res.status(410).json({
+    error:
+      'O cadastro direto foi desativado. Para conhecer a PetCare Pro, agende uma demonstração em /signup.',
+    redirect: '/signup',
+  });
+});
 
 /**
  * POST /api/auth/login
+ *
+ * Autentica o usuário e valida o status:
+ * - `ativo`     → devolve token + user
+ * - `pendente`  → HTTP 403 `status_pendente`
+ * - `bloqueado` → HTTP 403 `status_bloqueado`
+ *
+ * O frontend usa o campo `code` para redirecionar para /acesso-restrito.
  */
 router.post(
   '/login',
@@ -93,6 +51,22 @@ router.post(
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
+    // Bancos antigos podem não ter a coluna `status` preenchida; tratamos
+    // qualquer valor que não seja exatamente 'ativo' como acesso restrito.
+    const status = (user.status || 'pendente').toLowerCase();
+
+    if (status !== 'ativo') {
+      const code = status === 'bloqueado' ? 'status_bloqueado' : 'status_pendente';
+      return res.status(403).json({
+        error:
+          status === 'bloqueado'
+            ? 'Seu acesso está bloqueado. Entre em contato com nossa equipe para regularizar.'
+            : 'Seu acesso ainda não foi liberado. Aguarde a confirmação do seu plano pela nossa equipe.',
+        code,
+        redirect: '/acesso-restrito',
+      });
+    }
+
     const token = signToken(user);
     res.json({
       token,
@@ -102,6 +76,7 @@ router.post(
         name: user.name,
         email: user.email,
         role: user.role,
+        status,
       },
     });
   })
@@ -109,13 +84,17 @@ router.post(
 
 /**
  * GET /api/auth/me
+ *
+ * Além de retornar o usuário, revalida o status a cada chamada — se a
+ * equipe bloquear um usuário já logado, a próxima chamada de /me devolve
+ * 403 e o frontend pode expulsar a sessão.
  */
 router.get(
   '/me',
   requireAuth,
   asyncHandler(async (req, res) => {
     const result = await db.execute({
-      sql: `SELECT u.id, u.name, u.email, u.role, u.business_id,
+      sql: `SELECT u.id, u.name, u.email, u.role, u.status, u.business_id,
                    b.name AS business_name, b.plan
             FROM users u
             JOIN businesses b ON b.id = u.business_id
@@ -125,6 +104,16 @@ router.get(
 
     const user = result.rows[0];
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    const status = (user.status || 'pendente').toLowerCase();
+    if (status !== 'ativo') {
+      return res.status(403).json({
+        error: 'Acesso não liberado.',
+        code: status === 'bloqueado' ? 'status_bloqueado' : 'status_pendente',
+        redirect: '/acesso-restrito',
+      });
+    }
+
     res.json({ user });
   })
 );
