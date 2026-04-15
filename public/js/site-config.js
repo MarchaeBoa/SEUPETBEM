@@ -26,9 +26,8 @@
     brand: 'PetCare Pro',
 
     // Razão social e CNPJ — exibidos no rodapé, em páginas legais e no DPO.
-    // TODO: operador — substitua pelo CNPJ real da empresa antes do launch.
-    legalName: 'PetCare Pro Tecnologia Ltda.',
-    cnpj: '00.000.000/0001-00',
+    legalName: 'Soutag Tecnologia Brasil LTDA',
+    cnpj: '50.892.860/0001-55',
     address: 'São Paulo — SP, Brasil',
 
     // E-mails institucionais
@@ -89,8 +88,8 @@
   // ─────────── INJEÇÃO NO DOM ───────────
   // Qualquer elemento com [data-site="<chave>"] recebe o valor correspondente
   // como textContent quando o DOM estiver pronto. Exemplos:
-  //   <span data-site="cnpj"></span>      → "00.000.000/0001-00"
-  //   <span data-site="legalName"></span> → "PetCare Pro Tecnologia Ltda."
+  //   <span data-site="cnpj"></span>      → "50.892.860/0001-55"
+  //   <span data-site="legalName"></span> → "Soutag Tecnologia Brasil LTDA"
   function injectSiteData() {
     var nodes = document.querySelectorAll('[data-site]');
     for (var i = 0; i < nodes.length; i++) {
