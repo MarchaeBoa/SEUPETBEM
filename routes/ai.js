@@ -201,13 +201,13 @@ const FAQ_RULES = [
     keywords: ['senha', 'esqueci', 'login', 'logar', 'entrar'],
     answer:
       'Se esqueceu a senha, volte para /login e clique em "Esqueci minha senha". ' +
-      'Caso não receba o e-mail, fale com o suporte em suporte@petcarepro.com.br.',
+      'Caso não receba o e-mail, fale com o suporte em support@seupetbem.site.',
   },
   {
     keywords: ['suporte', 'ajuda', 'contato', 'falar com humano', 'atendente'],
     answer:
       'Nossa equipe atende de segunda a sexta, 8h às 19h. Mande um e-mail para ' +
-      'suporte@petcarepro.com.br ou chame no WhatsApp pelo chat no rodapé do site público.',
+      'support@seupetbem.site ou chame no WhatsApp pelo chat no rodapé do site público.',
   },
 ];
 

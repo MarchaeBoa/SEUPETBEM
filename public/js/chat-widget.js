@@ -7,7 +7,7 @@
   'use strict';
 
   var WA_NUMBER  = '5511999999999';                 // placeholder commercial WhatsApp
-  var EMAIL      = 'suporte@petcarepro.com.br';
+  var EMAIL      = 'support@seupetbem.site';
   var SEEN_KEY   = 'pcp_chat_seen';
   var OPEN_DELAY = 1400;
 
