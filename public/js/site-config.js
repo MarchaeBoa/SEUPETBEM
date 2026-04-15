@@ -28,12 +28,12 @@
     // Razão social e CNPJ — exibidos no rodapé, em páginas legais e no DPO.
     legalName: 'Soutag Tecnologia Brasil LTDA',
     cnpj: '50.892.860/0001-55',
-    address: 'São Paulo — SP, Brasil',
+    address: 'Avenida Getúlio Vargas, 167 — Funcionários, Belo Horizonte — MG, 30112-020',
 
     // E-mails institucionais
-    contactEmail: 'contato@petcarepro.com.br',
-    salesEmail: 'vendas@petcarepro.com.br',
-    dpoEmail: 'dpo@petcarepro.com.br',
+    contactEmail: 'support@seupetbem.site',
+    salesEmail: 'support@seupetbem.site',
+    dpoEmail: 'support@seupetbem.site',
 
     // Copyright line — ano é calculado dinamicamente abaixo.
     copyrightYear: new Date().getFullYear(),
